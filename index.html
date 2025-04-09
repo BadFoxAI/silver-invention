@@ -7,16 +7,20 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <title>Babylon.js World - Multi-File</title>
+    <title>Babylon.js World - Havok Physics & VR</title> <!-- Updated Title -->
 
     <link rel="stylesheet" href="style.css">
 
-    <!-- Babylon.js Core -->
-    <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <!-- Cannon.js Physics Engine Plugin -->
-    <script src="https://cdn.babylonjs.com/cannon.js"></script>
-    <!-- Babylon.js Loaders (Needed for .env environment files, etc.) -->
+    <!-- === UPDATED CDN LINKS === -->
+    <!-- Base BabylonJS (Minified) -->
+    <script src="https://cdn.babylonjs.com/babylon.min.js"></script>
+
+    <!-- Loaders module (Minified - Needed for .env environment files, etc.) -->
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+
+    <!-- Havok Physics (Recommended Engine) -->
+    <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
+    <!-- === END UPDATED CDN LINKS === -->
 
 </head>
 <body>
@@ -26,13 +30,14 @@
         Click Screen to Lock Mouse<br/>
         WASD: Move | Space: Jump<br>Mouse: Look | ESC: Unlock Mouse
         <br><br><span id="status">Initializing... (Requires HTTPS for VR)</span>
+        <!-- WebXR Errors will be appended here by JS -->
     </div>
     <div id="crosshair"></div>
 
     <!-- The Canvas for Babylon.js -->
     <canvas id="renderCanvas"></canvas>
 
-    <!-- Link to our JavaScript code (Module type handles deferring) -->
+    <!-- Link to our JavaScript code -->
     <script type="module" src="main.js"></script>
 </body>
 </html>
