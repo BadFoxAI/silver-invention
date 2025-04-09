@@ -7,11 +7,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <title>Babylon.js World - Havok Physics & VR</title> <!-- Updated Title -->
+    <title>Babylon.js World - Havok Physics & VR (Fixed)</title> <!-- Updated Title -->
 
     <link rel="stylesheet" href="style.css">
 
-    <!-- === UPDATED CDN LINKS === -->
     <!-- Base BabylonJS (Minified) -->
     <script src="https://cdn.babylonjs.com/babylon.min.js"></script>
 
@@ -20,7 +19,6 @@
 
     <!-- Havok Physics (Recommended Engine) -->
     <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
-    <!-- === END UPDATED CDN LINKS === -->
 
 </head>
 <body>
@@ -37,7 +35,9 @@
     <!-- The Canvas for Babylon.js -->
     <canvas id="renderCanvas"></canvas>
 
-    <!-- Link to our JavaScript code -->
-    <script type="module" src="main.js"></script>
+    <!-- === UPDATED SCRIPT TAG FOR main.js === -->
+    <!-- Use defer instead of type="module" to ensure Babylon libs load first -->
+    <script defer src="main.js"></script>
+    <!-- === END UPDATED SCRIPT TAG === -->
 </body>
 </html>
