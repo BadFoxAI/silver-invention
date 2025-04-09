@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <title>Babylon.js World - Single Page (Improved Errors)</title>
+    <title>Babylon.js World - Single Page (Fixed Load Order)</title>
 
     <!-- Embedded CSS -->
     <style>
@@ -28,12 +28,9 @@
         #info b { color: #6fa8dc; } /* Style heading */
         #status { font-weight: bold; display: block; margin-top: 8px; } /* Style status */
         .error-message { /* Style for appended errors */
-            color: #ff8080; /* Light red */
-            margin-top: 10px;
-            padding-top: 5px;
+            color: #ff8080; /* Light red */ margin-top: 10px; padding-top: 5px;
             border-top: 1px dashed rgba(255, 128, 128, 0.5);
-            font-size: 0.9em;
-            word-wrap: break-word;
+            font-size: 0.9em; word-wrap: break-word;
         }
         #crosshair {
             position: absolute; top: 50%; left: 50%; width: 2px; height: 20px;
@@ -46,12 +43,9 @@
         }
     </style>
 
-    <!-- === CDN SCRIPTS (Remain in HEAD) === -->
-    <!-- Base BabylonJS (Minified) -->
+    <!-- === CDN SCRIPTS (Remain in HEAD for early fetching) === -->
     <script src="https://cdn.babylonjs.com/babylon.min.js"></script>
-    <!-- Loaders module (Minified - Needed for .env environment files, etc.) -->
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    <!-- Havok Physics (Recommended Engine) -->
     <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
     <!-- === END CDN SCRIPTS === -->
 
@@ -70,304 +64,188 @@
     <!-- The Canvas for Babylon.js -->
     <canvas id="renderCanvas"></canvas>
 
-    <!-- Embedded JavaScript (at end of BODY) -->
+    <!-- Embedded JavaScript -->
     <script>
-        // --- DOM Element Selection ---
-        const canvas = document.getElementById('renderCanvas');
-        const infoElement = document.getElementById('info');
-        const statusElement = document.getElementById('status');
-        const crosshairElement = document.getElementById('crosshair');
+        // **** WRAP ALL CODE IN DOMContentLoaded ****
+        document.addEventListener('DOMContentLoaded', () => {
 
-        // --- Global Variables ---
-        let engine = null;
-        let scene = null;
-        let isPointerLocked = false;
-        let ground = null;
-        let playerCamera = null;
-        let xrHelper = null;
-        let physicsEnabled = false; // Flag to track if physics is successfully enabled
+            // --- DOM Element Selection ---
+            const canvas = document.getElementById('renderCanvas');
+            const infoElement = document.getElementById('info');
+            const statusElement = document.getElementById('status');
+            const crosshairElement = document.getElementById('crosshair');
 
-        // --- Helper Function to Display Errors ---
-        function displayError(context, error) {
-            console.error(`Error during ${context}:`, error); // Keep console logging
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message'; // Apply CSS class
-            errorDiv.innerHTML = `<b>${context} Error:</b><br>${error.message || error}`;
-            infoElement.appendChild(errorDiv);
-            statusElement.innerText = `${context} Failed!`;
-            statusElement.style.color = '#ff8080'; // Red status text
-        }
+            // --- Global Variables ---
+            let engine = null;
+            let scene = null;
+            let isPointerLocked = false;
+            let ground = null;
+            let playerCamera = null;
+            let xrHelper = null;
+            let physicsEnabled = false; // Flag
 
-        // --- Engine Initialization ---
-        try {
-            statusElement.innerText = "Initializing 3D Engine...";
-            // BABYLON should be defined now as CDN scripts are in <head>
-            engine = new BABYLON.Engine(canvas, true, {
-                preserveDrawingBuffer: true, stencil: true, antialias: true
-            });
-            statusElement.innerText = "Engine Initialized.";
-        } catch (e) {
-            displayError("Engine Initialization", e);
-            alert("FATAL ERROR: Could not initialize the 3D engine.\nYour browser may not be supported.\nCheck console for details.");
-            // Stop further execution if engine fails
-            throw e;
-        }
+            // --- Helper Function to Display Errors ---
+            function displayError(context, error) {
+                console.error(`Error during ${context}:`, error);
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.innerHTML = `<b>${context} Error:</b><br>${error.message || error}`;
+                infoElement.appendChild(errorDiv);
+                statusElement.innerText = `${context} Failed!`;
+                statusElement.style.color = '#ff8080';
+            }
 
-        // --- Scene Creation Function (Async) ---
-        const createScene = async () => {
+            // --- Engine Initialization ---
             try {
-                console.log("Creating scene...");
-                statusElement.innerText = "Creating Scene...";
-                scene = new BABYLON.Scene(engine);
-                scene.clearColor = new BABYLON.Color4(0, 0, 0, 1);
+                statusElement.innerText = "Initializing 3D Engine...";
+                // BABYLON should be defined now because this runs after scripts load
+                engine = new BABYLON.Engine(canvas, true, {
+                    preserveDrawingBuffer: true, stencil: true, antialias: true
+                });
+                statusElement.innerText = "Engine Initialized.";
+            } catch (e) {
+                displayError("Engine Initialization", e);
+                alert("FATAL ERROR: Could not initialize the 3D engine.\nCheck console for details.");
+                // No need to throw e here, as the rest of the code is inside the listener
+                return; // Stop execution within the listener if engine fails
+            }
 
-                // --- Physics Engine Setup (Using Havok) ---
-                const gravityVector = new BABYLON.Vector3(0, -9.81, 0);
-                let physicsPlugin;
-                try {
-                    statusElement.innerText = "Initializing Physics...";
-                    console.log("Initializing Havok Physics...");
-                    const havokInstance = await HavokPhysics(); // Global from UMD script
-                    physicsPlugin = new BABYLON.HavokPlugin(true, havokInstance);
-                    scene.enablePhysics(gravityVector, physicsPlugin);
-                    physicsEnabled = true; // Set flag on success
-                    console.log("Physics enabled with Havok.");
-                    statusElement.innerText = "Physics Initialized.";
-                } catch (physicsError) {
-                    physicsEnabled = false;
-                    displayError("Physics Initialization", physicsError);
-                    // Allow proceeding without physics, but log the failure clearly
-                }
+            // --- Scene Creation Function (Async) ---
+            const createScene = async () => {
+                // ... (rest of createScene function remains exactly the same as the previous single-page version) ...
+                 try {
+                    console.log("Creating scene..."); statusElement.innerText = "Creating Scene...";
+                    scene = new BABYLON.Scene(engine); scene.clearColor = new BABYLON.Color4(0, 0, 0, 1);
 
-                // --- Camera ---
-                statusElement.innerText = "Creating Camera...";
-                playerCamera = new BABYLON.UniversalCamera("playerCamera", new BABYLON.Vector3(0, 2.5, -10), scene);
-                playerCamera.attachControl(canvas, true);
-                playerCamera.speed = 0.5; playerCamera.angularSensibility = 3500; playerCamera.inertia = 0.1;
-                playerCamera.cameraRotation = new BABYLON.Vector2(0, 0);
-                playerCamera.keysUp.push(87); playerCamera.keysDown.push(83); playerCamera.keysLeft.push(65); playerCamera.keysRight.push(68);
-
-                // --- Player Physics & Collision ---
-                playerCamera.checkCollisions = true;
-                // Only apply gravity if physics actually initialized
-                playerCamera.applyGravity = physicsEnabled;
-                playerCamera.ellipsoid = new BABYLON.Vector3(0.5, 0.9, 0.5);
-                playerCamera.ellipsoidOffset = new BABYLON.Vector3(0, 0.9, 0);
-                playerCamera.collisionMask = 1;
-
-                // --- Environment Preset ---
-                let environmentHelper = null;
-                try {
-                    console.log("Creating default environment...");
-                    statusElement.innerText = "Loading Environment...";
-                    environmentHelper = scene.createDefaultEnvironment({
-                        createSkybox: true, skyboxTexture: "https://assets.babylonjs.com/environments/environmentSpecular.env",
-                        skyboxColor: new BABYLON.Color3(0.1, 0.1, 0.2), skyboxSize: 200, createGround: true, groundSize: 100,
-                        groundColor: new BABYLON.Color3(0.5, 0.55, 0.5), enableGroundShadow: true, groundYBias: 0.01
-                    });
-                    if (!environmentHelper) throw new Error("createDefaultEnvironment returned null.");
-
-                    environmentHelper.setMainColor(new BABYLON.Color3(0.85, 0.85, 0.85));
-                    if (!environmentHelper.ground) throw new Error("Environment helper created but ground is missing.");
-
-                    ground = environmentHelper.ground; ground.name = "environmentGround";
-                    ground.checkCollisions = true; ground.receiveShadows = true;
-                    if (!ground.material) {
-                        console.warn("Assigning fallback material to environment ground.");
-                        let groundMat = new BABYLON.StandardMaterial("envGroundMat", scene);
-                        groundMat.diffuseColor = new BABYLON.Color3(0.5, 0.55, 0.5); groundMat.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
-                        ground.material = groundMat;
-                    } else { ground.material.alpha = 1.0; }
-
-                    // Only add physics impostor if physics is enabled
-                    if (physicsEnabled) {
-                        ground.physicsImpostor = new BABYLON.PhysicsImpostor( ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1, friction: 0.8 }, scene );
-                    }
-                    console.log("Environment ground created.");
-                    statusElement.innerText = "Environment Loaded.";
-
-                } catch (envError) {
-                    displayError("Environment Creation", envError);
-                    scene.createDefaultLight(); // Add basic light if env fails
-                    // Create fallback ground if ground is still null
-                    if (!ground) {
-                        ground = BABYLON.MeshBuilder.CreateGround("errorFallbackGround", { width: 100, height: 100 }, scene);
-                        let fallbackMat = new BABYLON.StandardMaterial("fallbackGroundMat", scene);
-                        fallbackMat.diffuseColor = new BABYLON.Color3(0.6, 0.6, 0.6); ground.material = fallbackMat;
-                        // Add impostor only if physics was enabled, even for fallback
-                        if (physicsEnabled) {
-                            ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1 }, scene);
-                        }
-                        ground.checkCollisions = true; ground.receiveShadows = true;
-                        console.log("Created fallback ground due to environment error.");
-                    }
-                }
-
-                // --- Lighting & Shadows ---
-                statusElement.innerText = "Setting up Lighting...";
-                const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-0.6, -1, -0.4).normalize(), scene);
-                dirLight.position = new BABYLON.Vector3(50, 80, 40); dirLight.intensity = 1.2; dirLight.shadowMinZ = 1; dirLight.shadowMaxZ = 150;
-                const shadowGenerator = new BABYLON.ShadowGenerator(2048, dirLight);
-                shadowGenerator.useBlurExponentialShadowMap = true; shadowGenerator.blurKernel = 32; shadowGenerator.setDarkness(0.4); shadowGenerator.forceBackFacesOnly = true; shadowGenerator.bias = 0.005;
-                dirLight.shadowEnabled = true;
-                if (ground) { ground.receiveShadows = true; }
-
-
-                // --- Dynamic Objects ---
-                statusElement.innerText = "Adding Objects...";
-                const sphereMaterial = new BABYLON.StandardMaterial("sphereMat", scene); sphereMaterial.diffuseColor = new BABYLON.Color3(0.9, 0.4, 0.4); sphereMaterial.specularPower = 32;
-                const boxMaterial = new BABYLON.StandardMaterial("boxMat", scene); boxMaterial.diffuseColor = new BABYLON.Color3(0.4, 0.4, 0.9); boxMaterial.specularPower = 32;
-                const commonPhysicsProps = { restitution: 0.4, friction: 0.6 }; const objectCount = 25;
-                for (let i = 0; i < objectCount; i++) {
-                    const type = Math.random() < 0.5 ? 'sphere' : 'box'; const size = 0.8 + Math.random() * 1.8;
-                    const position = new BABYLON.Vector3((Math.random() - 0.5) * 70, 8 + Math.random() * 12, (Math.random() - 0.5) * 70);
-                    let mesh; let impostorType;
-                    if (type === 'sphere') { mesh = BABYLON.MeshBuilder.CreateSphere(`sphere${i}`, { diameter: size }, scene); mesh.material = sphereMaterial; impostorType = BABYLON.PhysicsImpostor.SphereImpostor; }
-                    else { mesh = BABYLON.MeshBuilder.CreateBox(`box${i}`, { size: size }, scene); mesh.material = boxMaterial; mesh.rotation.x = Math.random() * Math.PI; mesh.rotation.y = Math.random() * Math.PI; impostorType = BABYLON.PhysicsImpostor.BoxImpostor; }
-                    mesh.position = position; mesh.checkCollisions = true;
-                    // Only add physics impostor if physics is enabled
-                    if (physicsEnabled) {
-                        mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, impostorType, { mass: size * 1.2, ...commonPhysicsProps }, scene);
-                    }
-                    if (shadowGenerator) { shadowGenerator.addShadowCaster(mesh, true); }
-                }
-                console.log(`${objectCount} dynamic objects added.`);
-
-                // --- WebXR Experience ---
-                xrHelper = null;
-                if (navigator.xr) {
+                    // Physics Engine Setup
+                    const gravityVector = new BABYLON.Vector3(0, -9.81, 0); let physicsPlugin;
                     try {
-                        statusElement.innerText = "Initializing WebXR...";
-                        console.log("Attempting to initialize WebXR...");
-                        xrHelper = await scene.createDefaultXRExperienceAsync({ floorMeshes: ground ? [ground] : [], disableTeleportation: true, });
-                        if (xrHelper && xrHelper.baseExperience) {
-                            console.log("WebXR Experience Helper created successfully.");
-                            statusElement.innerText = "WebXR Ready."; // Keep status simple
-                            statusElement.style.color = '#8fbc8f'; // Green status
+                        statusElement.innerText = "Initializing Physics..."; console.log("Initializing Havok Physics...");
+                        const havokInstance = await HavokPhysics();
+                        physicsPlugin = new BABYLON.HavokPlugin(true, havokInstance);
+                        scene.enablePhysics(gravityVector, physicsPlugin);
+                        physicsEnabled = true; console.log("Physics enabled with Havok."); statusElement.innerText = "Physics Initialized.";
+                    } catch (physicsError) {
+                        physicsEnabled = false; displayError("Physics Initialization", physicsError);
+                    }
 
+                    // Camera
+                    statusElement.innerText = "Creating Camera...";
+                    playerCamera = new BABYLON.UniversalCamera("playerCamera", new BABYLON.Vector3(0, 2.5, -10), scene);
+                    playerCamera.attachControl(canvas, true); playerCamera.speed = 0.5; playerCamera.angularSensibility = 3500; playerCamera.inertia = 0.1;
+                    playerCamera.cameraRotation = new BABYLON.Vector2(0, 0); playerCamera.keysUp.push(87); playerCamera.keysDown.push(83); playerCamera.keysLeft.push(65); playerCamera.keysRight.push(68);
+                    playerCamera.checkCollisions = true; playerCamera.applyGravity = physicsEnabled;
+                    playerCamera.ellipsoid = new BABYLON.Vector3(0.5, 0.9, 0.5); playerCamera.ellipsoidOffset = new BABYLON.Vector3(0, 0.9, 0); playerCamera.collisionMask = 1;
+
+                    // Environment Preset
+                    let environmentHelper = null;
+                    try {
+                        statusElement.innerText = "Loading Environment..."; console.log("Creating default environment...");
+                        environmentHelper = scene.createDefaultEnvironment({ /* ... options ... */
+                            createSkybox: true, skyboxTexture: "https://assets.babylonjs.com/environments/environmentSpecular.env",
+                            skyboxColor: new BABYLON.Color3(0.1, 0.1, 0.2), skyboxSize: 200, createGround: true, groundSize: 100,
+                            groundColor: new BABYLON.Color3(0.5, 0.55, 0.5), enableGroundShadow: true, groundYBias: 0.01
+                         });
+                        if (!environmentHelper) throw new Error("createDefaultEnvironment returned null.");
+                        environmentHelper.setMainColor(new BABYLON.Color3(0.85, 0.85, 0.85));
+                        if (!environmentHelper.ground) throw new Error("Environment helper created but ground is missing.");
+                        ground = environmentHelper.ground; ground.name = "environmentGround"; ground.checkCollisions = true; ground.receiveShadows = true;
+                        if (!ground.material) { /* ... assign fallback material ... */
+                            let groundMat = new BABYLON.StandardMaterial("envGroundMat", scene); groundMat.diffuseColor = new BABYLON.Color3(0.5, 0.55, 0.5); groundMat.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1); ground.material = groundMat;
+                         } else { ground.material.alpha = 1.0; }
+                        if (physicsEnabled) { ground.physicsImpostor = new BABYLON.PhysicsImpostor( ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1, friction: 0.8 }, scene ); }
+                        console.log("Environment ground created."); statusElement.innerText = "Environment Loaded.";
+                    } catch (envError) {
+                        displayError("Environment Creation", envError); scene.createDefaultLight();
+                        if (!ground) { /* ... create fallback ground ... */
+                             ground = BABYLON.MeshBuilder.CreateGround("errorFallbackGround", { width: 100, height: 100 }, scene); let fallbackMat = new BABYLON.StandardMaterial("fallbackGroundMat", scene); fallbackMat.diffuseColor = new BABYLON.Color3(0.6, 0.6, 0.6); ground.material = fallbackMat;
+                             if (physicsEnabled) { ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1 }, scene); } ground.checkCollisions = true; ground.receiveShadows = true; console.log("Created fallback ground.");
+                         }
+                    }
+
+                    // Lighting & Shadows
+                    statusElement.innerText = "Setting up Lighting...";
+                    const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-0.6, -1, -0.4).normalize(), scene); /* ... light options ... */ dirLight.position = new BABYLON.Vector3(50, 80, 40); dirLight.intensity = 1.2; dirLight.shadowMinZ = 1; dirLight.shadowMaxZ = 150;
+                    const shadowGenerator = new BABYLON.ShadowGenerator(2048, dirLight); /* ... shadow options ... */ shadowGenerator.useBlurExponentialShadowMap = true; shadowGenerator.blurKernel = 32; shadowGenerator.setDarkness(0.4); shadowGenerator.forceBackFacesOnly = true; shadowGenerator.bias = 0.005;
+                    dirLight.shadowEnabled = true; if (ground) { ground.receiveShadows = true; }
+
+                    // Dynamic Objects
+                    statusElement.innerText = "Adding Objects...";
+                    const sphereMaterial = new BABYLON.StandardMaterial("sphereMat", scene); /* ... */ sphereMaterial.diffuseColor = new BABYLON.Color3(0.9, 0.4, 0.4); sphereMaterial.specularPower = 32;
+                    const boxMaterial = new BABYLON.StandardMaterial("boxMat", scene); /* ... */ boxMaterial.diffuseColor = new BABYLON.Color3(0.4, 0.4, 0.9); boxMaterial.specularPower = 32;
+                    const commonPhysicsProps = { restitution: 0.4, friction: 0.6 }; const objectCount = 25;
+                    for (let i = 0; i < objectCount; i++) { /* ... create spheres/boxes ... */
+                        const type = Math.random() < 0.5 ? 'sphere' : 'box'; const size = 0.8 + Math.random() * 1.8; const position = new BABYLON.Vector3((Math.random() - 0.5) * 70, 8 + Math.random() * 12, (Math.random() - 0.5) * 70); let mesh; let impostorType; if (type === 'sphere') { mesh = BABYLON.MeshBuilder.CreateSphere(`sphere${i}`, { diameter: size }, scene); mesh.material = sphereMaterial; impostorType = BABYLON.PhysicsImpostor.SphereImpostor; } else { mesh = BABYLON.MeshBuilder.CreateBox(`box${i}`, { size: size }, scene); mesh.material = boxMaterial; mesh.rotation.x = Math.random() * Math.PI; mesh.rotation.y = Math.random() * Math.PI; impostorType = BABYLON.PhysicsImpostor.BoxImpostor; } mesh.position = position; mesh.checkCollisions = true; if (physicsEnabled) { mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, impostorType, { mass: size * 1.2, ...commonPhysicsProps }, scene); } if (shadowGenerator) { shadowGenerator.addShadowCaster(mesh, true); }
+                    }
+                    console.log(`${objectCount} dynamic objects added.`);
+
+                    // WebXR Experience
+                    xrHelper = null;
+                    if (navigator.xr) {
+                        try {
+                            statusElement.innerText = "Initializing WebXR..."; console.log("Attempting to initialize WebXR...");
+                            xrHelper = await scene.createDefaultXRExperienceAsync({ floorMeshes: ground ? [ground] : [], disableTeleportation: true, });
+                            if (!xrHelper || !xrHelper.baseExperience) throw new Error("Base Experience could not be initialized.");
+                            console.log("WebXR Experience Helper created successfully."); statusElement.innerText = "WebXR Ready."; statusElement.style.color = '#8fbc8f';
                             xrHelper.baseExperience.onStateChangedObservable.add((state) => { console.log("WebXR State:", BABYLON.WebXRState[state]); /* ... */ });
                             if (xrHelper.baseExperience.onInitialCameraReadyObservable) { xrHelper.baseExperience.onInitialCameraReadyObservable.addOnce((xrCamera) => { console.log("WebXR Camera Ready."); }); }
-                            else { console.warn("onInitialCameraReadyObservable not found."); }
-                        } else { throw new Error("Base Experience could not be initialized."); }
-                    } catch (xrError) {
-                        displayError("WebXR Initialization", xrError);
-                        // Continue in desktop mode even if XR fails
+                             else { console.warn("onInitialCameraReadyObservable not found."); }
+                        } catch (xrError) { displayError("WebXR Initialization", xrError); }
+                    } else { console.warn("WebXR not supported."); statusElement.innerText = "WebXR Not Supported."; statusElement.style.color = '#ffa07a'; }
+
+                    setupControls();
+
+                    console.log("Scene creation complete.");
+                    if (!statusElement.innerText.includes("Error") && !statusElement.innerText.includes("Failed")) { statusElement.innerText = "Ready."; statusElement.style.color = '#8fbc8f'; }
+                    return scene;
+
+                } catch (sceneError) { displayError("Scene Creation", sceneError); return null; }
+            }; // --- End of createScene ---
+
+
+            // --- Control Setup Function ---
+            const setupControls = () => {
+                // ... (setupControls function remains exactly the same) ...
+                 try { statusElement.innerText = "Setting up Controls..."; scene.onPointerDown = (evt) => { const isInVR = xrHelper && xrHelper.baseExperience && xrHelper.baseExperience.state === BABYLON.WebXRState.IN_XR; if (evt.button === 0 && !isPointerLocked && !isInVR) { canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock; if (canvas.requestPointerLock) { canvas.requestPointerLock(); } else { console.warn("Pointer Lock API not available."); } } }; const pointerLockChange = () => { const element = document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement; const isInVR = xrHelper && xrHelper.baseExperience && xrHelper.baseExperience.state === BABYLON.WebXRState.IN_XR; if (element === canvas && !isInVR) { isPointerLocked = true; infoElement.style.display = 'none'; crosshairElement.style.display = 'block'; console.log("Pointer locked."); } else { isPointerLocked = false; if (!isInVR) { infoElement.style.display = 'block'; } else { infoElement.style.display = 'none'; } crosshairElement.style.display = 'none'; console.log("Pointer unlocked or in VR."); } }; document.addEventListener("pointerlockchange", pointerLockChange, false); document.addEventListener("mozpointerlockchange", pointerLockChange, false); document.addEventListener("webkitpointerlockchange", pointerLockChange, false); const jumpVelocity = 5.5; let canJump = true; const jumpCooldown = 700; scene.onKeyboardObservable.add((kbInfo) => { if (physicsEnabled && kbInfo.type === BABYLON.KeyboardEventTypes.KEYDOWN && kbInfo.event.code === "Space" && canJump) { if (playerCamera && ground) { const rayStart = playerCamera.position.subtract(new BABYLON.Vector3(0, playerCamera.ellipsoid.y * 0.9, 0)); const rayLength = playerCamera.ellipsoid.y * 1.1; const ray = new BABYLON.Ray(rayStart, new BABYLON.Vector3(0, -1, 0), rayLength); const pickInfo = scene.pickWithRay(ray, (mesh) => mesh === ground || (mesh.isPickable && mesh.physicsImpostor && mesh.physicsImpostor.mass > 0)); if (pickInfo && pickInfo.hit && pickInfo.distance < rayLength) { console.log("Jump initiated!"); playerCamera.cameraDirection.y = jumpVelocity; canJump = false; setTimeout(() => { canJump = true; }, jumpCooldown); } } } }); console.log("Controls initialized."); } catch (controlError) { displayError("Control Setup", controlError); }
+            };
+
+
+            // --- Main Execution Logic ---
+            (async () => {
+                try {
+                    const createdScene = await createScene();
+
+                    if (!createdScene) {
+                        console.error("Scene creation failed. Aborting further execution.");
+                        // Status is already set by displayError within createScene
+                        return; // Stop
                     }
-                } else {
-                    console.warn("WebXR is not supported by this browser/device.");
-                    statusElement.innerText = "WebXR Not Supported.";
-                    statusElement.style.color = '#ffa07a'; // Orange status
-                }
 
-                setupControls(); // Setup pointer lock and jump listeners
-
-                console.log("Scene creation complete.");
-                if (!statusElement.innerText.includes("Error") && !statusElement.innerText.includes("Failed")) {
-                     statusElement.innerText = "Ready."; // Final ready state if no errors reported
-                     statusElement.style.color = '#8fbc8f'; // Green
-                }
-                return scene;
-
-            } catch (sceneError) {
-                // Catch any unexpected errors during scene creation steps
-                displayError("Scene Creation", sceneError);
-                return null; // Indicate failure
-            }
-        }; // --- End of createScene ---
-
-
-        // --- Control Setup Function ---
-        const setupControls = () => {
-            try {
-                 statusElement.innerText = "Setting up Controls...";
-                // --- Pointer Lock ---
-                scene.onPointerDown = (evt) => {
-                    const isInVR = xrHelper && xrHelper.baseExperience && xrHelper.baseExperience.state === BABYLON.WebXRState.IN_XR;
-                    if (evt.button === 0 && !isPointerLocked && !isInVR) {
-                        canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
-                        if (canvas.requestPointerLock) { canvas.requestPointerLock(); }
-                        else { console.warn("Pointer Lock API not available."); }
-                    }
-                };
-                const pointerLockChange = () => { const element = document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement; const isInVR = xrHelper && xrHelper.baseExperience && xrHelper.baseExperience.state === BABYLON.WebXRState.IN_XR; if (element === canvas && !isInVR) { isPointerLocked = true; infoElement.style.display = 'none'; crosshairElement.style.display = 'block'; console.log("Pointer locked."); } else { isPointerLocked = false; if (!isInVR) { infoElement.style.display = 'block'; } else { infoElement.style.display = 'none'; } crosshairElement.style.display = 'none'; console.log("Pointer unlocked or in VR."); } };
-                document.addEventListener("pointerlockchange", pointerLockChange, false); document.addEventListener("mozpointerlockchange", pointerLockChange, false); document.addEventListener("webkitpointerlockchange", pointerLockChange, false);
-
-                // --- Jump Mechanic ---
-                const jumpVelocity = 5.5; let canJump = true; const jumpCooldown = 700;
-                scene.onKeyboardObservable.add((kbInfo) => {
-                    // Only allow jump if physics is enabled
-                    if (physicsEnabled && kbInfo.type === BABYLON.KeyboardEventTypes.KEYDOWN && kbInfo.event.code === "Space" && canJump) {
-                        if (playerCamera && ground) {
-                            const rayStart = playerCamera.position.subtract(new BABYLON.Vector3(0, playerCamera.ellipsoid.y * 0.9, 0));
-                            const rayLength = playerCamera.ellipsoid.y * 1.1;
-                            const ray = new BABYLON.Ray(rayStart, new BABYLON.Vector3(0, -1, 0), rayLength);
-                            const pickInfo = scene.pickWithRay(ray, (mesh) => mesh === ground || (mesh.isPickable && mesh.physicsImpostor && mesh.physicsImpostor.mass > 0));
-                            if (pickInfo && pickInfo.hit && pickInfo.distance < rayLength) {
-                                console.log("Jump initiated!"); playerCamera.cameraDirection.y = jumpVelocity; canJump = false;
-                                setTimeout(() => { canJump = true; }, jumpCooldown);
+                    console.log("Starting render loop.");
+                    engine.runRenderLoop(() => {
+                        try {
+                            if (scene && scene.activeCamera) {
+                               scene.render();
                             }
+                        } catch (renderError) {
+                            console.error("Error during render loop:", renderError);
+                            // engine.stopRenderLoop(); // Optional: Stop on error
                         }
-                    }
-                });
-                console.log("Controls initialized.");
-            } catch (controlError) {
-                 displayError("Control Setup", controlError);
-            }
-        };
+                    });
 
+                    window.addEventListener('resize', () => {
+                        try { if (engine) { engine.resize(); } }
+                        catch (resizeError) { console.error("Error during resize:", resizeError); }
+                    });
 
-        // --- Main Execution Logic ---
-        // Use an async IIFE wrapped in a try...catch for top-level error handling
-        (async () => {
-            try {
-                const createdScene = await createScene();
-
-                if (!createdScene) {
-                    // Scene creation function already displayed the error
-                    console.error("Scene creation failed. Aborting further execution.");
-                    // Status is already set to failed by displayError
-                    return; // Stop
+                } catch (e) {
+                    // Catch top-level async errors (less likely now with try/catch inside)
+                    displayError("Initialization Flow", e);
+                    alert(`FATAL ERROR during initialization: ${e.message}\nCheck console.`);
                 }
+            })();
 
-                console.log("Starting render loop.");
-                 // Set final 'Ready' status only if we reach here without critical errors
-                 if (!statusElement.innerText.includes("Error") && !statusElement.innerText.includes("Failed")) {
-                     statusElement.innerText = "Ready.";
-                     statusElement.style.color = '#8fbc8f'; // Green
-                 }
-
-                engine.runRenderLoop(() => {
-                    // Add a try-catch within the render loop for robustness during runtime
-                    // NOTE: This can impact performance, use judiciously or remove for production builds.
-                    try {
-                        if (scene && scene.activeCamera) { // Ensure scene and camera are valid
-                           scene.render();
-                        }
-                    } catch (renderError) {
-                        console.error("Error during render loop:", renderError);
-                        // Optionally, stop the loop or attempt recovery
-                        // engine.stopRenderLoop();
-                        // displayError("Render Loop", renderError); // Avoid flooding UI
-                    }
-                });
-
-                window.addEventListener('resize', () => {
-                    try { // Add try-catch around resize too
-                        if (engine) {
-                            engine.resize();
-                        }
-                    } catch (resizeError) {
-                         console.error("Error during resize:", resizeError);
-                    }
-                });
-
-            } catch (e) {
-                // Catch unexpected errors during the main async execution flow
-                displayError("Initialization", e);
-                alert(`FATAL ERROR during initialization: ${e.message}\nCheck console.`);
-            }
-        })();
-
+        }); // **** END of DOMContentLoaded Listener ****
     </script>
 
 </body>
