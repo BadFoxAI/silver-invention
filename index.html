@@ -2,37 +2,84 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Basic A-Frame Scene</title>
-    <meta name="description" content="Basic A-Frame Scene">
+    <title>A-Frame Scene with Physics</title> <!-- Updated Title -->
+    <meta name="description" content="A-Frame Scene with Physics">
+
     <!-- A-Frame Library -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <!-- You might add community components here later -->
+
+    <!-- A-Frame Physics System (using unpkg CDN) -->
+    <!-- This library adds the 'physics', 'static-body', 'dynamic-body' components -->
+    <script src="https://unpkg.com/aframe-physics-system@4.3.1/dist/aframe-physics-system.min.js"></script>
+
   </head>
   <body>
-    <!-- The <a-scene> tag is the root of your 3D world.
-         It sets up the renderer, camera, controls, and VR entry. -->
-    <a-scene background="color: #ECECEC">
+    <!-- Add the 'physics' component to the scene to enable the system -->
+    <!-- We can configure gravity, iterations etc. here if needed, but defaults are okay -->
+    <a-scene background="color: #ECECEC" physics="gravity: -9.8;">
 
-      <!-- Basic Shapes -->
-      <a-box position="-1 0.75 -3" rotation="0 45 0" color="#4CC3D9" shadow></a-box>
-      <a-sphere position="0 1.25 -5" radius="1.25" color="#EF2D5E" shadow></a-sphere>
-      <a-cylinder position="1 0.75 -3" radius="0.5" height="1.5" color="#FFC65D" shadow></a-cylinder>
+      <!-- Raise the dynamic shapes slightly so they fall -->
+
+      <!-- dynamic-body automatically infers shape from geometry -->
+      <a-box
+        position="-1 2 -3" <!-- Raised Y position -->
+        rotation="0 45 0"
+        color="#4CC3D9"
+        shadow="cast: true"
+        dynamic-body="shape: auto; mass: 1.5" > <!-- Add dynamic-body -->
+      </a-box>
+
+      <a-sphere
+        position="0 3 -5" <!-- Raised Y position -->
+        radius="1.25"
+        color="#EF2D5E"
+        shadow="cast: true"
+        dynamic-body="shape: auto; mass: 2.5" > <!-- Add dynamic-body -->
+      </a-sphere>
+
+      <a-cylinder
+        position="1 2.5 -3" <!-- Raised Y position -->
+        radius="0.5"
+        height="1.5"
+        color="#FFC65D"
+        shadow="cast: true"
+        dynamic-body="shape: auto; mass: 1" > <!-- Add dynamic-body -->
+      </a-cylinder>
 
       <!-- Ground Plane -->
-      <a-plane position="0 0 -4" rotation="-90 0 0" width="10" height="10" color="#7BC8A4" shadow></a-plane>
+      <!-- Add static-body so dynamic objects collide with it but it doesn't fall -->
+      <a-plane
+        position="0 0 -4"
+        rotation="-90 0 0"
+        width="10"
+        height="10"
+        color="#7BC8A4"
+        shadow="receive: true"
+        static-body > <!-- Add static-body -->
+      </a-plane>
 
       <!-- Background Sky -->
       <a-sky color="#87CEEB"></a-sky>
 
-      <!-- Simple Light -->
-      <a-light type="directional" color="#FFF" intensity="0.7" position="-1 1 2"></a-light>
-      <a-light type="ambient" color="#AAA"></a-light>
+      <!-- Lights (Important for shadows) -->
+      <a-light
+        type="directional"
+        color="#FFF"
+        intensity="0.8"
+        position="-2 5 3"
+        target="#target" <!-- Optional: Point light towards a target -->
+        castShadow="true"> <!-- Enable shadow casting for this light -->
+      </a-light>
+      <!-- Invisible target for the directional light -->
+       <a-entity id="target" position="0 0 -4"></a-entity>
+
+      <a-light type="ambient" color="#AAA" intensity="0.5"></a-light>
 
       <!--
-        By default, a-scene includes:
-        - A camera with look-controls (mouse drag / device orientation)
-        - WASD-controls for desktop movement (may need enabling/tweaking)
-        - An "Enter VR" button if WebXR is supported
+        A-Frame includes camera with look-controls (mouse/VR head)
+        and wasd-controls (check if enabled by default or add if needed).
+        The physics system does NOT automatically add physics to the default camera.
+        We would need a separate player entity for that.
       -->
 
     </a-scene>
