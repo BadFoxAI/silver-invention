@@ -2,103 +2,80 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>A-Frame FPS with Physics</title>
-    <meta name="description" content="A-Frame First-Person Shooter controls with Physics">
+    <title>A-Frame Physics World v2</title>
+    <meta name="description" content="A-Frame Physics World with Environment and Basic Assets">
 
     <!-- A-Frame Library -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
-    <!-- A-Frame Physics System (using Cannon.js driver by default) -->
+    <!-- A-Frame Physics System -->
     <script src="https://unpkg.com/aframe-physics-system@4.3.1/dist/aframe-physics-system.min.js"></script>
 
-    <!-- Optional: A-Frame Environment Component for nice presets later -->
-    <!-- <script src="https://unpkg.com/aframe-environment-component@1.3.9/dist/aframe-environment-component.min.js"></script> -->
+    <!-- A-Frame Environment Component for nice presets -->
+    <script src="https://unpkg.com/aframe-environment-component@1.3.9/dist/aframe-environment-component.min.js"></script>
 
 </head>
 <body>
-    <!-- Enable the physics system on the scene -->
-    <!-- debug: true shows collision shapes -->
-    <a-scene background="color: #ADD8E6" physics="gravity: -9.8; debug: false;">
+    <!-- Enable physics system on the scene AND turn on debug view -->
+    <a-scene physics="gravity: -9.8; debug: true;"> <!-- DEBUG ENABLED -->
 
-        <!-- Assets Management System (good practice, though not strictly needed for primitives) -->
+        <!-- Assets Management System (Good practice) -->
         <a-assets>
-            <!-- Define materials or models here later -->
+            <!-- Define reusable materials if needed -->
+            <a-mixin id="dynamic" dynamic-body="shape: auto; linearDamping: 0.05; angularDamping: 0.05;"></a-mixin>
+            <a-mixin id="wood" material="color: #A0522D; roughness: 0.8;"></a-mixin>
+            <a-mixin id="stone" material="color: #808080; roughness: 0.7;"></a-mixin>
         </a-assets>
 
+        <!-- Environment Component -->
+        <!-- This replaces manual sky, ground, and basic lighting -->
+        <!-- The ground created by this component will automatically get a static body if physics is present -->
+        <a-entity environment="preset: forest; ground: hills; groundYScale: 3; groundTexture: walkernoise; groundColor: #524439; groundColor2: #695748; dressing: trees; dressingAmount: 30; dressingScale: 3; fog: 0.8; shadow: true;"></a-entity>
+
+
         <!-- Player Rig -->
-        <!-- This entity represents the player -->
         <a-entity id="player"
-                  position="0 1.6 5" <!-- Start position (x y z), 1.6m height, back slightly -->
-                  wasd-controls="acceleration: 80" <!-- Standard WASD movement, higher acceleration -->
-                  dynamic-body="shape: capsule; <!-- Collision shape for player -->
-                                mass: 5;
-                                linearDamping: 0.9; <!-- Prevent sliding forever -->
-                                angularFactor: 0 0 0;" <!-- Prevent player capsule from rotating/tipping over -->
-                                >
-            <!-- The camera is nested inside the player entity -->
-            <!-- It moves with the player automatically -->
-            <!-- look-controls handles mouse drag / VR head look -->
+                  position="0 5 8" <!-- Start higher up, further back -->
+                  wasd-controls="acceleration: 80"
+                  dynamic-body="shape: capsule; mass: 5; linearDamping: 0.9; angularFactor: 0 0 0;"
+                  >
             <a-camera look-controls="pointerLockEnabled: true">
-                <!-- Optional: Add a cursor for interaction feedback -->
-                <a-cursor></a-cursor>
+                 <!-- Make cursor smaller and semi-transparent -->
+                <a-cursor scale="0.5 0.5 0.5" color="#FFF" opacity="0.5"></a-cursor>
             </a-camera>
         </a-entity>
 
 
-        <!-- Dynamic Objects (affected by physics) -->
-        <a-box position="-2 4 -3" rotation="10 30 5" color="#4CC3D9"
-               shadow="cast: true"
-               dynamic-body="mass: 1.5">
-        </a-box>
+        <!-- Dynamic Objects -->
+        <!-- Using mixins for physics and material -->
 
-        <a-sphere position="0 6 -5" radius="1" color="#EF2D5E"
-                  shadow="cast: true"
-                  dynamic-body="mass: 2.5; angularDamping: 0.1;"> <!-- Add some damping -->
-        </a-sphere>
+        <!-- Crates -->
+        <a-box mixin="dynamic wood" position="-3 8 -5" rotation="10 30 5" width="1.5" height="1.5" depth="1.5" shadow="cast: true"></a-box>
+        <a-box mixin="dynamic wood" position="-4 10 -5.5" rotation="-5 10 20" width="1.5" height="1.5" depth="1.5" shadow="cast: true"></a-box>
 
-        <a-cylinder position="2 3 -2" radius="0.5" height="1.5" color="#FFC65D"
-                    shadow="cast: true"
-                    dynamic-body="mass: 1">
-        </a-cylinder>
+        <!-- Boulders -->
+        <a-sphere mixin="dynamic stone" position="2 6 -6" radius="1.2" shadow="cast: true"></a-sphere>
+        <a-sphere mixin="dynamic stone" position="3 9 -7" radius="0.8" shadow="cast: true"></a-sphere>
 
-         <!-- Add a few more boxes -->
-         <a-box position="-1.5 8 -4" rotation="30 10 40" width="0.8" height="0.8" depth="0.8" color="#FFA07A"
-               shadow="cast: true"
-               dynamic-body="mass: 1">
-        </a-box>
-         <a-box position="1.8 5 -3.5" rotation="5 70 20" width="1.2" height="1.2" depth="1.2" color="#98FB98"
-               shadow="cast: true"
-               dynamic-body="mass: 1.8">
-        </a-box>
+        <!-- Pillar -->
+        <a-cylinder mixin="dynamic stone" position="5 5 -4" radius="0.7" height="4" shadow="cast: true"></a-cylinder>
+
+        <!-- Floating Torus (will fall) -->
+        <a-torus mixin="dynamic" material="color: #FFD700; metalness: 0.5;" position="-6 12 -8" radius="1.5" radius-tubular="0.3" rotation="30 45 10" shadow="cast: true"></a-torus>
+
+        <!-- Simple Platform Structure -->
+        <a-box mixin="stone" static-body position="0 2.5 -10" width="6" height="5" depth="1" shadow="receive: true; cast: true;"></a-box> <!-- Back wall -->
+        <a-box mixin="stone" static-body position="-3 0.25 -8" width="1" height="0.5" depth="4" shadow="receive: true; cast: true;"></a-box> <!-- Side platform -->
+         <a-box mixin="stone" static-body position="3 0.25 -8" width="1" height="0.5" depth="4" shadow="receive: true; cast: true;"></a-box> <!-- Side platform -->
+
+         <!-- Ramp (made of a rotated box) -->
+         <a-box mixin="wood" static-body position="0 0.7 -6" rotation="0 0 -20" width="3" height="0.3" depth="3" shadow="receive: true; cast: true;"></a-box>
 
 
-        <!-- Static Ground -->
-        <a-plane position="0 0 0" rotation="-90 0 0" width="50" height="50"
-                 color="#7BC8A4"
-                 shadow="receive: true"
-                 static-body> <!-- Makes it solid but immovable -->
-        </a-plane>
-
-        <!-- Lighting -->
-        <!-- Use the environment component later for better lighting/sky presets -->
-        <a-light type="ambient" color="#888"></a-light>
-        <a-light type="directional"
-                 position="-1 1.5 1"
-                 target="#player" <!-- Light follows player direction roughly -->
-                 intensity="0.8"
-                 castShadow="true"
-                 shadow-mapSize-width="2048" <!-- Increase shadow quality -->
-                 shadow-mapSize-height="2048"
-                 shadow-camera-left="-15"
-                 shadow-camera-right="15"
-                 shadow-camera-bottom="-15"
-                 shadow-camera-top="15"
-                 shadow-camera-near="0.5"
-                 shadow-camera-far="50">
-        </a-light>
-
-        <!-- Basic Sky -->
-        <a-sky color="#B0E0E6"></a-sky>
+        <!-- NOTE: The environment component adds its own lighting, so we remove the manual lights
+             unless we want very specific effects. The shadow parameter on environment enables shadows. -->
+        <!-- <a-light type="ambient" color="#888"></a-light> -->
+        <!-- <a-light type="directional" ... > </a-light> -->
 
     </a-scene>
 </body>
