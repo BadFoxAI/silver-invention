@@ -2,26 +2,25 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>A-Frame Physics Village - Debug & Polish</title>
-    <meta name="description" content="A-Frame Physics World - Debugging and improving visuals">
+    <title>A-Frame COMPLEX Physics Village (Build Back)</title>
+    <meta name="description" content="A-Frame Physics World - Rebuilding the complex village scene">
 
     <!-- A-Frame Library -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
-    <!-- Physics Scripts (Mozilla Ammo.js + c-frame physics system v4.2.3) -->
+    <!-- Physics Scripts (Correct Order & Versions) -->
     <script src="https://cdn.jsdelivr.net/gh/MozillaReality/ammo.js@8bbc0ea/builds/ammo.wasm.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.3/dist/aframe-physics-system.js"></script>
 
-    <!-- NOTE: Environment Component Removed for now to simplify ground/sky -->
-    <!-- <script src="https://unpkg.com/aframe-environment-component@1.3.9/dist/aframe-environment-component.min.js"></script> -->
+    <!-- NOTE: Environment Component still REMOVED - using manual ground/sky -->
 
 </head>
 <body>
-    <!-- Enable physics using AMMO driver AND DEBUG DRAWING -->
+    <!-- Enable physics using AMMO driver and KEEPING DEBUG DRAWING ON -->
     <a-scene physics="driver: ammo; debug: true; debugDrawMode: 1; gravity: -9.8;"
-             background="color: #87CEFA" <!-- Simple sky blue background -->
-             renderer="colorManagement: true; physicallyCorrectLights: true;" <!-- Improve lighting -->
-             shadow="type: pcfsoft; autoUpdate: true;"> <!-- Softer shadows -->
+             background="color: #B0E0E6" <!-- Slightly nicer sky blue -->
+             renderer="colorManagement: true; physicallyCorrectLights: true;"
+             shadow="type: pcfsoft; autoUpdate: true;">
 
         <!-- Asset Management System -->
         <a-assets>
@@ -39,52 +38,35 @@
             <a-mixin id="mat_fabric_red" material="color: #C82828; roughness: 0.9;"></a-mixin>
             <a-mixin id="mat_fabric_blue" material="color: #367588; roughness: 0.9;"></a-mixin>
             <a-mixin id="mat_glass_simple" material="color: #B0E0E6; opacity: 0.3; transparent: true;"></a-mixin>
-            <a-mixin id="mat_ground" material="color: #8FBC8F; roughness: 1;"></a-mixin> <!-- Simple ground color -->
-            <a-mixin id="mat_path" material="color: #BCA480; roughness: 1;"></a-mixin> <!-- Path color -->
+            <a-mixin id="mat_ground" material="color: #8FBC8F; roughness: 1;"></a-mixin>
+            <a-mixin id="mat_path" material="color: #BCA480; roughness: 1;"></a-mixin>
 
-            <!-- Physics Properties -->
-            <a-mixin id="phys_dynamic_tiny" ammo-body="type: dynamic; mass: 0.5; linearDamping: 0.2; angularDamping: 0.2;" ammo-shape="type: auto;"></a-mixin>
-            <a-mixin id="phys_dynamic_light" ammo-body="type: dynamic; mass: 2; linearDamping: 0.1; angularDamping: 0.1;" ammo-shape="type: auto;"></a-mixin>
-            <a-mixin id="phys_dynamic_medium" ammo-body="type: dynamic; mass: 15; linearDamping: 0.1; angularDamping: 0.1;" ammo-shape="type: auto;"></a-mixin>
-            <a-mixin id="phys_dynamic_heavy" ammo-body="type: dynamic; mass: 50; linearDamping: 0.1; angularDamping: 0.1;" ammo-shape="type: auto;"></a-mixin>
-            <a-mixin id="phys_static" ammo-body="type: static;" ammo-shape="type: auto;"></a-mixin>
-
-            <!-- Combined Object Blueprints -->
-            <a-mixin id="obj_crate" phys_dynamic_medium mat_wood_dark shadow="cast: true;"></a-mixin>
-            <a-mixin id="obj_barrel" phys_dynamic_heavy mat_wood_dark shadow="cast: true;"></a-mixin>
-            <a-mixin id="obj_stone_block" phys_dynamic_heavy mat_stone_grey shadow="cast: true;"></a-mixin>
-            <a-mixin id="obj_wall_segment" phys_static mat_stone_wall shadow="cast: true; receive: true;"></a-mixin>
-            <a-mixin id="obj_plaster_wall" phys_static mat_plaster_white shadow="cast: true; receive: true;"></a-mixin>
-            <a-mixin id="obj_wood_beam" phys_static mat_wood_dark shadow="cast: true; receive: true;"></a-mixin>
-            <a-mixin id="obj_plank" phys_dynamic_light mat_wood_light shadow="cast: true;"></a-mixin>
-            <a-mixin id="obj_pottery" phys_dynamic_tiny material="color: #CD853F; roughness: 0.7;" shadow="cast: true;"></a-mixin>
+            <!-- Physics Properties - Using direct attributes for clarity below -->
+            <!-- <a-mixin id="phys_dynamic_tiny" ... > -->
+            <!-- <a-mixin id="phys_dynamic_light" ... > -->
+            <!-- ... etc ... -->
+            <!-- Applying physics directly to entities in this version -->
 
         </a-assets>
 
-        <!-- Simple Visible Physics Ground Plane -->
-        <a-plane id="ground"
-                 position="0 -0.05 0" <!-- Slightly below origin to avoid z-fighting -->
+        <!-- === Visible Physics Ground Plane === -->
+        <a-plane id="ground-plane"
+                 position="0 -0.05 0"
                  rotation="-90 0 0"
-                 width="100" height="100" <!-- Much larger -->
+                 width="120" height="120" <!-- Even larger -->
                  mixin="mat_ground"
                  ammo-body="type: static;"
-                 ammo-shape="type: box;" <!-- Simple box collider for the plane -->
+                 ammo-shape="type: box; halfExtents: 60 0.1 60;" <!-- Match size -->
                  shadow="receive: true;">
         </a-plane>
 
-        <!-- Optional: Slightly darker path -->
-        <a-plane id="path"
-                 position="0 0 -10"
-                 rotation="-90 0 0"
-                 width="5" height="40"
-                 mixin="mat_path phys_static" <!-- Give it static body too -->
-                 shadow="receive: true;">
-        </a-plane>
+         <!-- Paths -->
+        <a-plane id="path-main" position="0 0 -15" rotation="-90 0 0" width="6" height="50" mixin="mat_path" ammo-body="type: static;" ammo-shape="type: box; halfExtents: 3 0.1 25;" shadow="receive: true;"></a-plane>
+        <a-plane id="path-cross" position="-10 0 5" rotation="-90 0 0" width="40" height="4" mixin="mat_path" ammo-body="type: static;" ammo-shape="type: box; halfExtents: 20 0.1 2;" shadow="receive: true;"></a-plane>
 
-
-        <!-- Player Rig - Adjusted starting position -->
+        <!-- Player Rig -->
         <a-entity id="player"
-                  position="0 1.6 25" <!-- Start further back -->
+                  position="0 5 30" <!-- Start higher, further back -->
                   wasd-controls="acceleration: 120"
                   ammo-body="type: dynamic; mass: 75; linearDamping: 0.98; angularFactor: 0 0 0;"
                   ammo-shape="type: capsule; fit: manual; height: 1.6; radius: 0.35;">
@@ -93,102 +75,151 @@
             </a-camera>
         </a-entity>
 
-        <!-- Lighting - Manual Setup for more control -->
+        <!-- Lighting -->
         <a-entity light="type: ambient; color: #BBB; intensity: 0.5"></a-entity>
-        <!-- Main directional light (sun) with shadows -->
-        <a-entity light="type: directional;
-                         color: #FFF;
-                         intensity: 0.8;
-                         castShadow: true;
-                         shadowMapHeight: 2048; shadowMapWidth: 2048;
-                         shadowCameraLeft: -30; shadowCameraRight: 30;
-                         shadowCameraBottom: -30; shadowCameraTop: 30;
-                         shadowCameraNear: 0.5; shadowCameraFar: 150;
-                         shadowBias: -0.001;
-                         target: #player"
-                   position="-5 10 3">
+        <a-entity id="sun" light="type: directional; color: #FFF; intensity: 0.8; castShadow: true; shadowMapHeight: 2048; shadowMapWidth: 2048; shadowCameraLeft: -40; shadowCameraRight: 40; shadowCameraBottom: -40; shadowCameraTop: 40; shadowCameraNear: 0.5; shadowCameraFar: 150; shadowBias: -0.001; target: #player"
+                   position="-15 20 10"> <!-- Higher sun position -->
         </a-entity>
-         <!-- Fill light (optional, softer, opposite side) -->
-        <a-entity light="type: directional; color: #666; intensity: 0.3;" position="5 5 -5"></a-entity>
+        <a-entity light="type: directional; color: #555; intensity: 0.3;" position="15 10 -15"></a-entity>
 
 
-        <!-- === Village Structures (Static) === -->
+        <!-- === REBUILDING THE COMPLEX VILLAGE === -->
+        <!-- Applying ammo-body and ammo-shape directly -->
 
-        <!-- Larger House 1 (Plaster & Wood) -->
-        <a-entity position="-15 0 -15" rotation="0 20 0">
-            <!-- Base -->
-            <a-box mixin="obj_plaster_wall" position="0 2 0" width="8" height="4" depth="6"></a-box>
-            <!-- Beams -->
-            <a-box mixin="obj_wood_beam" position="-4 0.2 0" width="0.3" height="4" depth="6.1"></a-box>
-            <a-box mixin="obj_wood_beam" position="4 0.2 0" width="0.3" height="4" depth="6.1"></a-box>
-            <a-box mixin="obj_wood_beam" position="0 0.2 -3" width="8.1" height="4" depth="0.3"></a-box>
-            <a-box mixin="obj_wood_beam" position="0 0.2 3" width="8.1" height="4" depth="0.3"></a-box>
-             <a-box mixin="obj_wood_beam" position="0 3.85 0" width="8.1" height="0.3" depth="6.1"></a-box> <!-- Top beam -->
-            <!-- Roof -->
-            <a-box mixin="mat_roof_tile_red phys_static" position="0 4.5 0" width="8.5" height="0.3" depth="6.5" rotation="-25 0 0"></a-box>
-            <a-box mixin="mat_roof_tile_red phys_static" position="0 4.5 0" width="8.5" height="0.3" depth="6.5" rotation="25 0 0"></a-box> <!-- Double slope -->
-             <!-- Chimney -->
-             <a-box mixin="obj_wall_segment" position="3 4.5 2" width="0.8" height="1.5" depth="0.8"></a-box>
-            <!-- Windows -->
-             <a-box mixin="mat_glass_simple phys_static" position="-2 2.5 3.01" width="1.5" height="1" depth="0.05"></a-box>
-             <a-box mixin="mat_glass_simple phys_static" position="2 2.5 3.01" width="1.5" height="1" depth="0.05"></a-box>
-             <!-- Door -->
-            <a-box mixin="mat_wood_dark phys_static" position="0 1.25 3.01" width="1.5" height="2.5" depth="0.1"></a-box>
+        <!-- === Village Center / Market Area === -->
+        <a-entity id="market-square" position="0 0 0">
+
+            <!-- Market Stalls (Static Bases, Dynamic Goods) -->
+            <a-entity position="-10 0 -5" rotation="0 30 0">
+                 <a-box position="0 0.75 0" mixin="mat_wood_beam" width="0.3" height="1.5" depth="0.3" ammo-body="type: static;" ammo-shape="type: box;"></a-box> <a-box position="2 0.75 0" mixin="mat_wood_beam" width="0.3" height="1.5" depth="0.3" ammo-body="type: static;" ammo-shape="type: box;"></a-box> <a-box position="0 0.75 -1.5" mixin="mat_wood_beam" width="0.3" height="1.5" depth="0.3" ammo-body="type: static;" ammo-shape="type: box;"></a-box> <a-box position="2 0.75 -1.5" mixin="mat_wood_beam" width="0.3" height="1.5" depth="0.3" ammo-body="type: static;" ammo-shape="type: box;"></a-box>
+                 <a-box position="1 1.5 -0.75" mixin="mat_wood_light" width="2.5" height="0.15" depth="2" ammo-body="type: static;" ammo-shape="type: box;"></a-box>
+                 <a-box position="1 2.5 -0.75" mixin="mat_fabric_red" rotation="-15 0 0" width="2.8" height="0.1" depth="2.5" ammo-body="type: static;" ammo-shape="type: box;"></a-box>
+                 <!-- Dynamic goods -->
+                 <a-sphere position="0.5 2.0 -0.5" radius="0.2" mixin="mat_foliage" ammo-body="type: dynamic; mass: 0.5;" ammo-shape="type: sphere;"></a-sphere> <!-- Apples? -->
+                 <a-sphere position="1.5 2.0 -1" radius="0.25" mixin="mat_foliage" ammo-body="type: dynamic; mass: 0.5;" ammo-shape="type: sphere;"></a-sphere>
+                 <a-cone position="1 2.0 -0.2" radius-bottom="0.15" height="0.3" mixin="obj_pottery" ammo-body="type: dynamic; mass: 0.5;" ammo-shape="type: cone;"></a-cone>
+            </a-entity>
+
+             <a-entity position="-6 0 -10" rotation="0 -10 0">
+                 <a-box position="0 0.75 0" mixin="mat_wood_beam" width="0.3" height="1.5" depth="0.3" ammo-body="type: static;" ammo-shape="type: box;"></a-box> <a-box position="2 0.75 0" mixin="mat_wood_beam" width="0.3" height="1.5" depth="0.3" ammo-body="type: static;" ammo-shape="type: box;"></a-box>
+                 <a-box position="1 1.5 0" mixin="mat_wood_light" width="2.5" height="0.15" depth="1.5" ammo-body="type: static;" ammo-shape="type: box;"></a-box>
+                 <a-box position="1 2.5 0" mixin="mat_fabric_blue" rotation="-20 0 5" width="2.8" height="0.1" depth="2.0" ammo-body="type: static;" ammo-shape="type: box;"></a-box>
+                 <!-- Dynamic Crates -->
+                 <a-box position="0.8 2.0 0" width="0.5" height="0.5" depth="0.5" mixin="mat_wood_dark" ammo-body="type: dynamic; mass: 1;" ammo-shape="type: box;"></a-box>
+                 <a-box position="1.3 2.0 0" width="0.5" height="0.5" depth="0.5" mixin="mat_wood_dark" ammo-body="type: dynamic; mass: 1;" ammo-shape="type: box;"></a-box>
+                 <a-box position="1.05 2.5 0" width="0.5" height="0.5" depth="0.5" mixin="mat_wood_dark" ammo-body="type: dynamic; mass: 1;" ammo-shape="type: box;"></a-box>
+             </a-entity>
+
+             <!-- Central Well (Static) -->
+             <a-entity position="0 0 -8">
+                <a-cylinder position="0 0.6 0" mixin="mat_stone_grey" radius="1.5" height="1.2" ammo-body="type: static;" ammo-shape="type: cylinder;"></a-cylinder>
+                <a-box position="-1.2 1.7 0" mixin="obj_wood_beam" width="0.3" height="2" depth="0.3"></a-box> <a-box position="1.2 1.7 0" mixin="obj_wood_beam" width="0.3" height="2" depth="0.3"></a-box> <a-box position="0 2.7 0" mixin="obj_wood_beam" width="2.7" height="0.3" depth="0.3"></a-box>
+                <a-cylinder position="0 2.2 0" mixin="mat_wood_dark" radius="0.15" height="0.6" rotation="0 0 90" ammo-body="type: static;" ammo-shape="type: cylinder;"></a-cylinder>
+                <a-box position="0 3.3 0" mixin="mat_roof_thatch" width="3.2" height="0.6" depth="3.2" rotation="0 45 0" ammo-body="type: static;" ammo-shape="type: box;"></a-box>
+                <!-- Dynamic Bucket -->
+                <a-cylinder position="0 1.5 -1" radius="0.3" height="0.4" mixin="mat_metal_rusty" ammo-body="type: dynamic; mass: 2;" ammo-shape="type: cylinder;"></a-cylinder>
+             </a-entity>
+
+             <!-- Scattered Barrels/Crates (Dynamic) -->
+             <a-cylinder position="-8 1.0 -8" radius="0.6" height="1.5" mixin="obj_barrel" ammo-body="type: dynamic; mass: 25;" ammo-shape="type: cylinder;"></a-cylinder>
+             <a-cylinder position="-8.6 1.0 -7.5" radius="0.6" height="1.5" mixin="obj_barrel" ammo-body="type: dynamic; mass: 25;" ammo-shape="type: cylinder;"></a-cylinder>
+             <a-box position="-7.5 1.0 -9" width="1.2" height="1.2" depth="1.2" mixin="obj_crate" ammo-body="type: dynamic; mass: 10;" ammo-shape="type: box;"></a-box>
+             <a-box position="-7.5 2.2 -9" width="1.2" height="1.2" depth="1.2" mixin="obj_crate" ammo-body="type: dynamic; mass: 10;" ammo-shape="type: box;"></a-box>
+             <a-box position="-7.5 3.4 -9" width="1.2" height="1.2" depth="1.2" mixin="obj_crate" ammo-body="type: dynamic; mass: 10;" ammo-shape="type: box;"></a-box>
+
         </a-entity>
 
-        <!-- Stone Tower -->
-        <a-entity position="18 0 -20">
-             <a-cylinder mixin="obj_wall_segment" position="0 4 0" radius="3" height="8"></a-cylinder>
-             <a-torus mixin="obj_wall_segment" position="0 8.1 0" radius="3" radius-tubular="0.2" rotation="90 0 0"></a-torus> <!-- Crenellations approx -->
-             <a-torus mixin="obj_wall_segment" position="0 8.1 0" radius="2.6" radius-tubular="0.2" rotation="90 0 0"></a-torus>
-             <!-- Inner platform -->
-             <a-cylinder mixin="mat_wood_light phys_static" position="0 7.8 0" radius="2.9" height="0.2"></a-cylinder>
-             <!-- Dynamic Flag -->
-              <a-box mixin="phys_dynamic_light mat_fabric_red" position="0 10 0" width="0.1" height="1.5" depth="1" shadow="cast: true;"></a-box> <!-- Flag Pole -->
-              <a-plane mixin="phys_dynamic_light mat_fabric_blue" position="0 9.5 0.5" width="1.5" height="1" rotation="0 0 5" shadow="cast: true;"></a-plane> <!-- Cloth -->
+        <!-- === Housing Cluster 1 === -->
+        <a-entity id="house-cluster-1" position="20 0 5" rotation="0 -60 0">
+            <!-- House 3 (Taller, Plaster) -->
+             <a-entity position="0 0 0">
+                 <a-box position="0 2 0" mixin="obj_plaster_wall" width="7" height="4" depth="5"></a-box>
+                 <a-box position="-3.5 0.25 0" mixin="obj_wood_beam" width="0.3" height="4" depth="5.1"></a-box> <a-box position="3.5 0.25 0" mixin="obj_wood_beam" width="0.3" height="4" depth="5.1"></a-box> <a-box position="0 0.25 -2.5" mixin="obj_wood_beam" width="7.1" height="4" depth="0.3"></a-box> <a-box position="0 0.25 2.5" mixin="obj_wood_beam" width="7.1" height="4" depth="0.3"></a-box> <a-box position="0 3.85 0" mixin="obj_wood_beam" width="7.1" height="0.3" depth="5.1"></a-box>
+                 <a-box position="0 4.5 0" mixin="mat_roof_tile_red phys_static" width="7.5" height="0.3" depth="5.5" rotation="-20 0 0"></a-box>
+                 <a-box position="0 4.5 0" mixin="mat_roof_tile_red phys_static" width="7.5" height="0.3" depth="5.5" rotation="20 0 0"></a-box>
+                 <a-box position="2.5 5.0 -1.5" mixin="obj_wall_segment" width="1" height="2" depth="1"></a-box> <!-- Chimney -->
+                 <a-box position="-2 2.5 2.51" mixin="mat_glass_simple phys_static" width="1.5" height="1" depth="0.05"></a-box> <a-box position="2 2.5 2.51" mixin="mat_glass_simple phys_static" width="1.5" height="1" depth="0.05"></a-box>
+                 <a-box position="0 1.25 2.51" mixin="mat_wood_dark phys_static" width="1.5" height="2.5" depth="0.1"></a-box> <!-- Door -->
+                 <a-cylinder position="-4 0.5 1" mixin="obj_pottery" radius="0.4" height="0.8" ammo-body="type: dynamic; mass: 1;" ammo-shape="type: cylinder;"></a-cylinder>
+                 <a-cone position="-4 1.0 1.8" mixin="obj_pottery" radius-bottom="0.3" height="0.6" ammo-body="type: dynamic; mass: 1;" ammo-shape="type: cone;"></a-cone>
+             </a-entity>
+
+             <!-- House 4 (Smaller, Stone) -->
+             <a-entity position="7 0 3" rotation="0 25 0">
+                 <a-box position="0 1.25 0" mixin="obj_wall_segment" width="4.5" height="2.5" depth="3.5"></a-box>
+                 <a-box position="0 2.6 0" mixin="mat_roof_thatch phys_static" width="5" height="0.6" depth="4" rotation="10 0 0"></a-box>
+                 <a-box position="2.3 1.5 0" width="0.2" height="3" depth="0.1" mixin="obj_plank" rotation="0 0 -20" ammo-body="type: dynamic; mass: 2;" ammo-shape="type: box;"></a-box> <!-- Leaning plank -->
+                 <a-box position="2.5 1.8 -0.5" width="0.2" height="2.5" depth="0.1" mixin="obj_plank" rotation="0 10 -25" ammo-body="type: dynamic; mass: 2;" ammo-shape="type: box;"></a-box>
+             </a-entity>
         </a-entity>
 
-         <!-- Simple Shed -->
-         <a-entity position="8 0 10" rotation="0 -70 0">
-            <a-box mixin="mat_wood_light phys_static" position="0 1 0" width="4" height="2" depth="3" shadow="cast: true; receive: true;"></a-box>
-            <a-box mixin="mat_wood_dark phys_static" position="0 2.1 0" width="4.2" height="0.2" depth="3.2" rotation="-15 0 0" shadow="cast: true; receive: true;"></a-box> <!-- Slanted Roof -->
-            <!-- Lots of dynamic clutter -->
-            <a-box mixin="obj_crate" position="0.5 0.5 -2" width="0.8" height="0.8" depth="0.8"></a-box>
-            <a-box mixin="obj_crate" position="1.5 0.5 -2.2" width="0.8" height="0.8" depth="0.8"></a-box>
-            <a-box mixin="obj_crate" position="1.0 1.3 -2.1" width="0.8" height="0.8" depth="0.8"></a-box>
-            <a-cylinder mixin="obj_pottery" position="-1 0.3 -1.8" radius="0.3" height="0.6"></a-cylinder>
-            <a-cone mixin="obj_pottery" position="-1.5 0.2 -1.5" radius-bottom="0.4" height="0.4"></a-cone>
+         <!-- === Housing Cluster 2 (Other side) === -->
+         <a-entity id="house-cluster-2" position="-20 0 15" rotation="0 130 0">
+             <!-- House 5 (L-shape) -->
+             <a-box position="0 1.5 0" mixin="obj_plaster_wall" width="4" height="3" depth="6"></a-box>
+             <a-box position="-2.5 1.5 -3" mixin="obj_plaster_wall" width="6" height="3" depth="4"></a-box>
+             <a-box position="-1 3.1 -1.5" mixin="mat_roof_tile_red phys_static" width="8" height="0.3" depth="7" rotation="0 0 5"></a-box>
+
+             <!-- House 6 (Round Stone) -->
+             <a-entity position="-10 0 2" rotation="0 -15 0">
+                 <a-cylinder position="0 1.5 0" mixin="obj_wall_segment" radius="3" height="3"></a-cylinder>
+                 <a-cone position="0 3.5 0" mixin="mat_roof_thatch phys_static" radius-bottom="3.5" height="1.2"></a-cone>
+                 <a-cylinder position="4 1.0 0" mixin="obj_barrel" radius="0.6" height="1.5" ammo-body="type: dynamic; mass: 25;" ammo-shape="type: cylinder;"></a-cylinder>
+                 <a-cylinder position="4.5 1.0 0.5" mixin="obj_barrel" radius="0.6" height="1.5" ammo-body="type: dynamic; mass: 25;" ammo-shape="type: cylinder;"></a-cylinder>
+             </a-entity>
          </a-entity>
 
-         <!-- Market Area (Improved) -->
-         <a-entity id="market-area" position="-5 0 5">
-              <!-- Stall 1 -->
-             <a-entity position="0 0 0" rotation="0 -20 0"> <a-box mixin="obj_wood_beam" position="0 0.75 0" width="0.3" height="1.5" depth="0.3"></a-box> <a-box mixin="obj_wood_beam" position="2.5 0.75 0" width="0.3" height="1.5" depth="0.3"></a-box> <a-box mixin="obj_wood_beam" position="0 0.75 -2" width="0.3" height="1.5" depth="0.3"></a-box> <a-box mixin="obj_wood_beam" position="2.5 0.75 -2" width="0.3" height="1.5" depth="0.3"></a-box> <a-box mixin="mat_wood_light phys_static" position="1.25 1.5 -1" width="3" height="0.15" depth="2.5"></a-box> <a-box mixin="mat_fabric_red phys_static" position="1.25 2.5 -1" rotation="-15 0 0" width="3.5" height="0.1" depth="3"></a-box> <a-sphere mixin="obj_pottery" position="0.5 1.7 -0.5" radius="0.2"></a-sphere> <a-sphere mixin="obj_pottery" position="1.5 1.7 -1" radius="0.25"></a-sphere> <a-cone mixin="obj_pottery" position="1 1.7 -0.2" radius-bottom="0.15" height="0.3"></a-cone> <a-sphere mixin="obj_pottery" position="2 1.7 -1.5" radius="0.2"></a-sphere> </a-entity>
-             <!-- Stall 2 -->
-             <a-entity position="5 0 -2" rotation="0 10 0"> <a-box mixin="obj_wood_beam" position="0 0.75 0" width="0.3" height="1.5" depth="0.3"></a-box> <a-box mixin="obj_wood_beam" position="2 0.75 0" width="0.3" height="1.5" depth="0.3"></a-box> <a-box mixin="mat_wood_light phys_static" position="1 1.5 0" width="2.5" height="0.15" depth="1.5"></a-box> <a-box mixin="mat_fabric_blue phys_static" position="1 2.5 0" rotation="-20 0 5" width="2.8" height="0.1" depth="2.0"></a-box> <a-box mixin="obj_crate" position="0.8 1.7 0" width="0.5" height="0.5" depth="0.5"></a-box> <a-box mixin="obj_crate" position="1.3 1.7 0" width="0.5" height="0.5" depth="0.5"></a-box> <a-box mixin="obj_crate" position="1.05 2.2 0" width="0.5" height="0.5" depth="0.5"></a-box> <a-box mixin="obj_crate" position="0.5 1.7 -0.5" width="0.5" height="0.5" depth="0.5"></a-box> </a-entity>
-             <!-- Well -->
-             <a-entity position="2.5 0 -6"> <a-cylinder mixin="mat_stone_grey phys_static" position="0 0.6 0" radius="1.5" height="1.2"></a-cylinder> <a-box mixin="obj_wood_beam" position="-1.2 1.7 0" width="0.3" height="2" depth="0.3"></a-box> <a-box mixin="obj_wood_beam" position="1.2 1.7 0" width="0.3" height="2" depth="0.3"></a-box> <a-box mixin="obj_wood_beam" position="0 2.7 0" width="2.7" height="0.3" depth="0.3"></a-box> <a-cylinder mixin="mat_wood_dark phys_static" position="0 2.2 0" radius="0.15" height="0.6" rotation="0 0 90"></a-cylinder> <a-box mixin="mat_roof_thatch phys_static" position="0 3.3 0" width="3.2" height="0.6" depth="3.2" rotation="0 45 0"></a-box> </a-entity>
+        <!-- === MORE Dynamic Objects Scattered Around === -->
+
+        <!-- Collapsible Tower -->
+         <a-entity position="15 0 20">
+             <a-box position="0 0.75 0" width="1.8" height="1.5" depth="1.8" mixin="obj_stone_block" ammo-body="type: dynamic; mass: 50;" ammo-shape="type: box;"></a-box>
+             <a-box position="0 2.25 0" width="1.6" height="1.5" depth="1.6" mixin="obj_stone_block" ammo-body="type: dynamic; mass: 40;" ammo-shape="type: box;"></a-box>
+             <a-box position="0 3.75 0" width="1.4" height="1.5" depth="1.4" mixin="obj_stone_block" ammo-body="type: dynamic; mass: 30;" ammo-shape="type: box;"></a-box>
+             <a-box position="0 5.25 0" width="1.2" height="1.5" depth="1.2" mixin="obj_stone_block" ammo-body="type: dynamic; mass: 20;" ammo-shape="type: box;"></a-box>
+             <a-box position="0 6.75 0" width="1.0" height="1.5" depth="1.0" mixin="obj_stone_block" ammo-body="type: dynamic; mass: 15;" ammo-shape="type: box;"></a-box>
+             <a-sphere position="0 8.5 0" radius="0.6" mixin="mat_metal_rusty" ammo-body="type: dynamic; mass: 5;" ammo-shape="type: sphere;"></a-sphere> <!-- Top -->
          </a-entity>
 
-         <!-- === More Dynamic Clutter === -->
-         <a-cylinder mixin="obj_barrel" position="-10 0.75 5" radius="0.6" height="1.5"></a-cylinder>
-         <a-cylinder mixin="obj_barrel" position="-10.5 0.75 5.5" radius="0.6" height="1.5"></a-cylinder>
-         <a-cylinder mixin="obj_barrel" position="-10.25 2.25 5.25" radius="0.6" height="1.5"></a-cylinder> <!-- Stacked -->
-
-         <a-box mixin="obj_plank" position="12 5 -15" width="3" height="0.15" depth="0.3" rotation="10 20 30"></a-box>
-         <a-box mixin="obj_plank" position="13 6 -15.5" width="2.5" height="0.15" depth="0.3" rotation="-5 10 25"></a-box>
-         <a-box mixin="obj_plank" position="11 7 -16" width="3.2" height="0.15" depth="0.3" rotation="0 15 35"></a-box>
-
-         <!-- Simple Static Fence -->
-         <a-entity position="-20 0 -5" rotation="0 90 0">
-            <a-box mixin="obj_wood_beam" position="0 0.5 0" width="0.15" height="1.0" depth="0.15"></a-box>
-            <a-box mixin="obj_wood_beam" position="1 0.5 0" width="0.15" height="1.0" depth="0.15"></a-box>
-            <a-box mixin="obj_wood_beam" position="2 0.5 0" width="0.15" height="1.0" depth="0.15"></a-box>
-            <a-box mixin="obj_wood_beam" position="3 0.5 0" width="0.15" height="1.0" depth="0.15"></a-box>
-            <a-box mixin="obj_wood_beam" position="4 0.5 0" width="0.15" height="1.0" depth="0.15"></a-box>
-            <a-box mixin="mat_wood_light phys_static" position="2 0.7 0.05" width="4.2" height="0.1" depth="0.05"></a-box>
-            <a-box mixin="mat_wood_light phys_static" position="2 0.3 0.05" width="4.2" height="0.1" depth="0.05"></a-box>
+         <!-- Wood Pile -->
+         <a-entity position="-5 0 20" rotation="0 30 0">
+              <!-- Base (Static) -->
+             <a-box position="0 0.1 0" width="2.5" height="0.2" depth="1.5" mixin="mat_wood_dark phys_static"></a-box>
+             <!-- Dynamic Planks -->
+             <a-box position="0 0.5 0" width="2" height="0.2" depth="0.3" mixin="obj_plank" rotation="0 0 5"></a-box>
+             <a-box position="0.1 0.7 -0.1" width="1.8" height="0.2" depth="0.3" mixin="obj_plank" rotation="0 5 -3"></a-box>
+             <a-box position="-0.1 0.9 0.1" width="2.1" height="0.2" depth="0.3" mixin="obj_plank" rotation="0 -5 4"></a-box>
+             <a-box position="0 1.1 0" width="1.9" height="0.2" depth="0.3" mixin="obj_plank" rotation="0 0 -6"></a-box>
+             <a-box position="0.05 1.3 -0.05" width="2.0" height="0.2" depth="0.3" mixin="obj_plank" rotation="0 8 2"></a-box>
+             <a-box position="-0.05 1.5 0.05" width="1.8" height="0.2" depth="0.3" mixin="obj_plank" rotation="0 -3 -4"></a-box>
          </a-entity>
+
+          <!-- Lamppost -->
+          <a-entity position="10 0 -2">
+              <a-cylinder position="0 2 0" mixin="mat_metal_dark phys_static" radius="0.15" height="4"></a-cylinder>
+              <a-box position="0 4 0.4" mixin="mat_metal_dark phys_static" width="0.2" height="0.2" depth="1.0"></a-box>
+              <a-sphere position="0 4 0.9" mixin="mat_bright_accent phys_static" material="emissive: #FFFF00; emissiveIntensity: 0.5;" radius="0.3"></a-sphere> <!-- Glowing -->
+              <a-light type="point" color="#FFD700" intensity="0.8" distance="8" decay="2" position="0 4 0.9"></a-light> <!-- Point light source -->
+          </a-entity>
+
+          <!-- Bench -->
+          <a-entity position="-3 0 22" rotation="0 -100 0">
+                <a-box position="0 0.4 0" mixin="mat_wood_light phys_static" width="2.5" height="0.15" depth="0.6"></a-box>
+                <a-box position="-1.0 0.2 0" mixin="mat_wood_light phys_static" width="0.3" height="0.6" depth="0.6"></a-box>
+                <a-box position="1.0 0.2 0" mixin="mat_wood_light phys_static" width="0.3" height="0.6" depth="0.6"></a-box>
+                <a-box position="0 0.8 -0.25" mixin="mat_wood_light phys_static" width="2.5" height="0.8" depth="0.1"></a-box>
+          </a-entity>
+
+           <!-- Target Practice Area -->
+           <a-entity position="-25 0 0" rotation="0 90 0">
+               <a-box position="0 1.5 0" mixin="obj_wall_segment" width="8" height="3" depth="0.5"></a-box> <!-- Back wall -->
+               <a-ring position="0 1.5 2" radius-inner="0.2" radius-outer="1.5" mixin="mat_wood_dark phys_static"></a-ring> <!-- Target Back -->
+               <a-ring position="0 1.5 2.1" radius-inner="0.1" radius-outer="0.5" mixin="mat_fabric_red phys_static"></a-ring> <!-- Bullseye -->
+               <!-- Dynamic things to shoot/throw -->
+                <a-box position="-2 5 1.5" width="0.5" height="0.5" depth="0.5" mixin="obj_crate" ammo-body="type: dynamic; mass: 1;" ammo-shape="type: box;"></a-box>
+                <a-cylinder position="0 6 1.5" radius="0.3" height="0.8" mixin="obj_pottery" ammo-body="type: dynamic; mass: 0.5;" ammo-shape="type: cylinder;"></a-cylinder>
+                <a-sphere position="2 7 1.5" radius="0.4" mixin="mat_metal_rusty" ammo-body="type: dynamic; mass: 2;" ammo-shape="type: sphere;"></a-sphere>
+           </a-entity>
 
     </a-scene>
 </body>
