@@ -2,88 +2,136 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>A-Frame Ammo Physics (Guide v4.2.3)</title> <!-- Updated Title -->
-    <meta name="description" content="A-Frame Physics World using Ammo.js driver - Following Official Guide">
+    <title>A-Frame Physics Village</title>
+    <meta name="description" content="A-Frame Physics World - Village Scene with Ammo.js">
 
-    <!-- A-Frame Library (Using latest stable 1.5.0) -->
+    <!-- A-Frame Library -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
-    <!-- === Physics Scripts (Correct Order & Versions FROM USER GUIDE) === -->
-    <!-- 1. Load Recommended Ammo.js Fork FIRST -->
+    <!-- Physics Scripts (Mozilla Ammo.js + c-frame physics system v4.2.3) -->
     <script src="https://cdn.jsdelivr.net/gh/MozillaReality/ammo.js@8bbc0ea/builds/ammo.wasm.js"></script>
-    <!-- 2. Load Correct aframe-physics-system AFTER Ammo -->
     <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.3/dist/aframe-physics-system.js"></script>
-    <!-- === End Physics Scripts === -->
 
     <!-- A-Frame Environment Component -->
     <script src="https://unpkg.com/aframe-environment-component@1.3.9/dist/aframe-environment-component.min.js"></script>
 
 </head>
 <body>
-    <!-- Enable physics using AMMO driver and debug -->
-    <!-- Using physics settings from the guide -->
-    <a-scene physics="driver: ammo; debug: true; debugDrawMode: 1; gravity: -9.8;">
+    <!-- Using Ammo driver, debug disabled for performance (enable if needed) -->
+    <a-scene physics="driver: ammo; debug: false; debugDrawMode: 0; gravity: -9.8;">
 
         <!-- Assets Management System -->
         <a-assets>
-            <a-mixin id="wood" material="color: #A0522D; roughness: 0.8;"></a-mixin>
-            <a-mixin id="stone" material="color: #808080; roughness: 0.7;"></a-mixin>
-            <a-mixin id="metal" material="color: #FFD700; metalness: 0.6; roughness: 0.4;"></a-mixin>
+            <!-- Materials -->
+            <a-mixin id="mat_wood_dark" material="color: #8B4513; roughness: 0.9; metalness: 0.1;"></a-mixin>
+            <a-mixin id="mat_wood_light" material="color: #DEB887; roughness: 0.8; metalness: 0.1;"></a-mixin>
+            <a-mixin id="mat_stone_grey" material="color: #778899; roughness: 0.85; metalness: 0.15;"></a-mixin>
+            <a-mixin id="mat_stone_wall" material="color: #A9A9A9; roughness: 0.9;"></a-mixin>
+            <a-mixin id="mat_roof_red" material="color: #B22222; roughness: 0.7;"></a-mixin>
+            <a-mixin id="mat_metal_rusty" material="color: #B87333; roughness: 0.6; metalness: 0.4;"></a-mixin>
+            <a-mixin id="mat_foliage" material="color: #228B22; roughness: 0.9;"></a-mixin>
+            <a-mixin id="mat_bright_accent" material="color: #FFD700; metalness: 0.1; roughness: 0.5;"></a-mixin>
+
+            <!-- Physics Properties -->
+            <a-mixin id="phys_dynamic_light" ammo-body="type: dynamic; mass: 1; linearDamping: 0.1; angularDamping: 0.1;" ammo-shape="type: auto;"></a-mixin> <!-- auto shape often works for primitives -->
+            <a-mixin id="phys_dynamic_medium" ammo-body="type: dynamic; mass: 5; linearDamping: 0.1; angularDamping: 0.1;" ammo-shape="type: auto;"></a-mixin>
+            <a-mixin id="phys_dynamic_heavy" ammo-body="type: dynamic; mass: 20; linearDamping: 0.1; angularDamping: 0.1;" ammo-shape="type: auto;"></a-mixin>
+            <a-mixin id="phys_static" ammo-body="type: static;" ammo-shape="type: auto;"></a-mixin>
+
+            <!-- Combined Object Blueprints -->
+            <a-mixin id="obj_crate" phys_dynamic_medium mat_wood_dark shadow="cast: true;"></a-mixin>
+            <a-mixin id="obj_barrel" phys_dynamic_heavy mat_wood_dark shadow="cast: true;"></a-mixin>
+            <a-mixin id="obj_stone_block" phys_dynamic_heavy mat_stone_grey shadow="cast: true;"></a-mixin>
+            <a-mixin id="obj_wall_segment" phys_static mat_stone_wall shadow="cast: true; receive: true;"></a-mixin>
+            <a-mixin id="obj_ground_plane" phys_static shadow="receive: true;"></a-mixin> <!-- Ground specifically -->
+
         </a-assets>
 
-        <!-- Environment Component -->
-        <!-- Added Ammo attributes for static ground physics -->
-        <a-entity environment="preset: forest; ground: hills; groundYScale: 3; groundTexture: walkernoise; groundColor: #524439; groundColor2: #695748; dressing: trees; dressingAmount: 30; dressingScale: 3; fog: 0.8; shadow: true;"
+        <!-- Environment - Using a preset that feels less 'natural' for a village -->
+        <a-entity environment="preset: contact; ground: flat; groundColor: #6B8E23; groundColor2: #556B2F; groundYScale: 0.1; skyType: atmosphere; skyColor: #87CEEB; horizonColor: #ADD8E6; fog: 0.7; shadow: true; shadowSize: 20; dressing: none;"
+                  <!-- The ground MUST have static physics applied -->
                   ammo-body="type: static;"
-                  ammo-shape="type: box;"> <!-- Approximating hill ground as box -->
+                  <!-- Box shape is usually fine for flat environment ground -->
+                  ammo-shape="type: box;"
+                  >
         </a-entity>
 
-        <!-- Player Rig -->
+
+        <!-- Player Rig - Starting slightly higher to ensure it's above ground -->
         <a-entity id="player"
-                  position="0 10 8" <!-- Start high -->
-                  wasd-controls="acceleration: 80"
-                  <!-- ammo-body uses default dynamic type if not specified -->
-                  ammo-body="mass: 70; linearDamping: 0.95; angularFactor: 0 0 0;" <!-- Specify properties -->
-                  <!-- Capsule shape requires fit: manual -->
-                  ammo-shape="type: capsule; fit: manual; height: 1.6; radius: 0.3;">
-            <a-camera look-controls="pointerLockEnabled: true">
-                <a-cursor scale="0.5 0.5 0.5" color="#FFF" opacity="0.5"></a-cursor>
+                  position="0 1.6 15" <!-- Start further back -->
+                  wasd-controls="acceleration: 100" <!-- Faster acceleration -->
+                  ammo-body="type: dynamic; mass: 75; linearDamping: 0.98; angularFactor: 0 0 0;"
+                  ammo-shape="type: capsule; fit: manual; height: 1.6; radius: 0.35;">
+            <a-camera look-controls="pointerLockEnabled: true; reverseMouseDrag: false;">
+                <a-cursor scale="0.5 0.5 0.5" color="#FFF" opacity="0.4" fuse="false"></a-cursor>
             </a-camera>
         </a-entity>
 
-        <!-- Dynamic Objects (Using Ammo attributes) -->
-        <a-box mixin="wood" position="-3 15 -5" rotation="10 30 5" width="1.5" height="1.5" depth="1.5" shadow="cast: true"
-               ammo-body="type: dynamic; mass: 10;" ammo-shape="type: box;">
-        </a-box>
-        <a-box mixin="wood" position="-4 18 -5.5" rotation="-5 10 20" width="1.5" height="1.5" depth="1.5" shadow="cast: true"
-               ammo-body="type: dynamic; mass: 10;" ammo-shape="type: box;">
-        </a-box>
-        <a-sphere mixin="stone" position="2 12 -6" radius="1.2" shadow="cast: true"
-                  ammo-body="type: dynamic; mass: 50; angularDamping: 0.1;" ammo-shape="type: sphere;">
-        </a-sphere>
-        <a-sphere mixin="stone" position="3 16 -7" radius="0.8" shadow="cast: true"
-                  ammo-body="type: dynamic; mass: 20; angularDamping: 0.1;" ammo-shape="type: sphere;">
-        </a-sphere>
-        <a-cylinder mixin="stone" position="5 10 -4" radius="0.7" height="4" shadow="cast: true"
-                    ammo-body="type: dynamic; mass: 80;" ammo-shape="type: cylinder;">
-        </a-cylinder>
-        <a-torus mixin="metal" position="-6 20 -8" radius="1.5" radius-tubular="0.3" rotation="30 45 10" shadow="cast: true"
-                 ammo-body="type: dynamic; mass: 5;" ammo-shape="type: cylinder;"> <!-- Approx -->
-        </a-torus>
 
-        <!-- Static Platforms -->
-        <a-box mixin="stone" position="0 2.5 -10" width="6" height="5" depth="1" shadow="receive: true; cast: true;"
-               ammo-body="type: static;" ammo-shape="type: box;">
-        </a-box>
-        <a-box mixin="stone" position="-3 0.25 -8" width="1" height="0.5" depth="4" shadow="receive: true; cast: true;"
-               ammo-body="type: static;" ammo-shape="type: box;">
-        </a-box>
-        <a-box mixin="stone" position="3 0.25 -8" width="1" height="0.5" depth="4" shadow="receive: true; cast: true;"
-               ammo-body="type: static;" ammo-shape="type: box;">
-        </a-box>
-        <a-box mixin="wood" position="0 0.7 -6" rotation="0 0 -20" width="3" height="0.3" depth="3" shadow="receive: true; cast: true;"
-               ammo-body="type: static;" ammo-shape="type: box;"> <!-- Ramp -->
-        </a-box>
+        <!-- Village Structures (Static) -->
+
+        <!-- Simple House 1 -->
+        <a-entity position="-10 0 -10">
+            <a-box mixin="obj_wall_segment" position="0 1.5 0" width="6" height="3" depth="0.5"></a-box> <!-- Front Wall -->
+            <a-box mixin="obj_wall_segment" position="0 1.5 -4" width="6" height="3" depth="0.5"></a-box> <!-- Back Wall -->
+            <a-box mixin="obj_wall_segment" position="-3 1.5 -2" width="0.5" height="3" depth="4"></a-box> <!-- Left Wall -->
+            <a-box mixin="obj_wall_segment" position="3 1.5 -2" width="0.5" height="3" depth="4"></a-box> <!-- Right Wall -->
+            <a-cone mixin="mat_roof_red obj_wall_segment" position="0 3.5 -2" radius-bottom="4.5" radius-top="0" height="1" rotation="0 0 0"></a-cone> <!-- Simple Roof -->
+             <!-- Doorway (gap in wall) -->
+             <a-box mixin="mat_wood_dark obj_wall_segment" position="0 0.9 0.26" width="1.2" height="1.8" depth="0.1"></a-box> <!-- Door -->
+        </a-entity>
+
+        <!-- Simple House 2 -->
+         <a-entity position="12 0 -8" rotation="0 -30 0">
+            <a-box mixin="obj_wall_segment" position="0 1.25 0" width="5" height="2.5" depth="4"></a-box> <!-- Base -->
+            <a-box mixin="mat_roof_red obj_wall_segment" position="0 2.75 0" width="5.5" height="0.5" depth="4.5"></a-box> <!-- Flat Roof -->
+            <a-cylinder mixin="mat_stone_grey obj_wall_segment" position="2 3.25 1.5" radius="0.3" height="1"></a-cylinder> <!-- Chimney -->
+        </a-entity>
+
+        <!-- Watchtower -->
+        <a-entity position="-8 0 8">
+             <a-cylinder mixin="obj_wall_segment" position="0 3 0" radius="2" height="6"></a-cylinder> <!-- Main Tower -->
+             <a-torus mixin="mat_wood_dark obj_wall_segment" position="0 6.1 0" radius="2" radius-tubular="0.2" rotation="90 0 0"></a-torus> <!-- Top Railing -->
+             <a-cone mixin="mat_roof_red obj_wall_segment" position="0 7 0" radius-bottom="2.5" radius-top="0" height="1.5"></a-cone> <!-- Roof -->
+        </a-entity>
+
+         <!-- Low Walls / Fences -->
+        <a-box mixin="obj_wall_segment mat_wood_light" position="0 0.5 -15" width="20" height="1" depth="0.2"></a-box>
+        <a-box mixin="obj_wall_segment mat_wood_light" position="-10 0.5 -10" rotation="0 90 0" width="10" height="1" depth="0.2"></a-box>
+        <a-box mixin="obj_wall_segment mat_wood_light" position="10 0.5 -12" rotation="0 90 0" width="6" height="1" depth="0.2"></a-box>
+
+
+        <!-- Dynamic Objects (More interactions) -->
+
+        <!-- Stack of Crates -->
+        <a-box mixin="obj_crate" position="5 0.75 -12" width="1.5" height="1.5" depth="1.5"></a-box>
+        <a-box mixin="obj_crate" position="5 2.25 -12" width="1.5" height="1.5" depth="1.5"></a-box>
+        <a-box mixin="obj_crate" position="5 3.75 -12" width="1.5" height="1.5" depth="1.5"></a-box>
+
+        <!-- Stack of Stone Blocks -->
+        <a-box mixin="obj_stone_block" position="-8 0.75 -2" width="1" height="1.5" depth="1"></a-box>
+        <a-box mixin="obj_stone_block" position="-8 2.25 -2" width="1" height="1.5" depth="1"></a-box>
+        <a-sphere mixin="phys_dynamic_medium mat_bright_accent" position="-8 4 -2" radius="0.6" shadow="cast: true;"></a-sphere> <!-- Ball on top -->
+
+        <!-- Barrels -->
+        <a-cylinder mixin="obj_barrel" position="8 1 -6" radius="0.6" height="1.5"></a-cylinder>
+        <a-cylinder mixin="obj_barrel" position="8.5 1 -5" radius="0.6" height="1.5" rotation="0 0 90"></a-cylinder> <!-- Tipped over -->
+        <a-cylinder mixin="obj_barrel" position="7.5 1 -5" radius="0.6" height="1.5"></a-cylinder>
+
+        <!-- Scattered Planks -->
+        <a-box mixin="phys_dynamic_light mat_wood_light" position="-6 5 5" width="0.2" height="3" depth="0.1" rotation="15 90 10" shadow="cast: true;"></a-box>
+        <a-box mixin="phys_dynamic_light mat_wood_light" position="-5.5 6 5.5" width="0.2" height="2.5" depth="0.1" rotation="-10 80 -5" shadow="cast: true;"></a-box>
+
+         <!-- Some loose stones -->
+        <a-sphere mixin="phys_dynamic_light mat_stone_grey" position="1 5 0" radius="0.3" shadow="cast: true;"></a-sphere>
+        <a-sphere mixin="phys_dynamic_light mat_stone_grey" position="1.2 6 0.3" radius="0.4" shadow="cast: true;"></a-sphere>
+        <a-sphere mixin="phys_dynamic_light mat_stone_grey" position="0.8 7 -0.2" radius="0.35" shadow="cast: true;"></a-sphere>
+
+        <!-- Target Practice? -->
+        <a-ring mixin="phys_dynamic_medium mat_metal_rusty" position="-15 1.5 -10" radius-inner="0.8" radius-outer="1.2" rotation="0 90 10" shadow="cast: true;"></a-ring>
+        <a-cone mixin="phys_dynamic_light mat_bright_accent" position="-15 4 -10" radius-bottom="0.5" height="1" shadow="cast: true;"></a-cone>
+
 
     </a-scene>
 </body>
