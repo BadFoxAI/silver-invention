@@ -2,17 +2,17 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>A-Frame Ammo Physics World (Guide Fix)</title> <!-- Updated Title -->
-    <meta name="description" content="A-Frame Physics World using Ammo.js driver - Applying Guide Fix">
+    <title>A-Frame Ammo Physics (Guide v4.2.3)</title> <!-- Updated Title -->
+    <meta name="description" content="A-Frame Physics World using Ammo.js driver - Following Official Guide">
 
     <!-- A-Frame Library (Using latest stable 1.5.0) -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
-    <!-- === Physics Scripts (Correct Order & Versions from Guide) === -->
-    <!-- 1. Load Ammo.js FIRST -->
-    <script src="https://mixedreality.mozilla.org/ammo.js/builds/ammo.wasm.js"></script>
-    <!-- 2. Load aframe-physics-system AFTER Ammo -->
-    <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@v4.0.1/dist/aframe-physics-system.min.js"></script>
+    <!-- === Physics Scripts (Correct Order & Versions FROM USER GUIDE) === -->
+    <!-- 1. Load Recommended Ammo.js Fork FIRST -->
+    <script src="https://cdn.jsdelivr.net/gh/MozillaReality/ammo.js@8bbc0ea/builds/ammo.wasm.js"></script>
+    <!-- 2. Load Correct aframe-physics-system AFTER Ammo -->
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.3/dist/aframe-physics-system.js"></script>
     <!-- === End Physics Scripts === -->
 
     <!-- A-Frame Environment Component -->
@@ -42,7 +42,9 @@
         <a-entity id="player"
                   position="0 10 8" <!-- Start high -->
                   wasd-controls="acceleration: 80"
-                  ammo-body="type: dynamic; mass: 70; linearDamping: 0.95; angularFactor: 0 0 0;"
+                  <!-- ammo-body uses default dynamic type if not specified -->
+                  ammo-body="mass: 70; linearDamping: 0.95; angularFactor: 0 0 0;" <!-- Specify properties -->
+                  <!-- Capsule shape requires fit: manual -->
                   ammo-shape="type: capsule; fit: manual; height: 1.6; radius: 0.3;">
             <a-camera look-controls="pointerLockEnabled: true">
                 <a-cursor scale="0.5 0.5 0.5" color="#FFF" opacity="0.5"></a-cursor>
