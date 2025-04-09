@@ -1,252 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Basic A-Frame Scene</title>
+    <meta name="description" content="Basic A-Frame Scene">
+    <!-- A-Frame Library -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <!-- You might add community components here later -->
+  </head>
+  <body>
+    <!-- The <a-scene> tag is the root of your 3D world.
+         It sets up the renderer, camera, controls, and VR entry. -->
+    <a-scene background="color: #ECECEC">
 
-    <title>Babylon.js World - Single Page (Fixed Load Order)</title>
+      <!-- Basic Shapes -->
+      <a-box position="-1 0.75 -3" rotation="0 45 0" color="#4CC3D9" shadow></a-box>
+      <a-sphere position="0 1.25 -5" radius="1.25" color="#EF2D5E" shadow></a-sphere>
+      <a-cylinder position="1 0.75 -3" radius="0.5" height="1.5" color="#FFC65D" shadow></a-cylinder>
 
-    <!-- Embedded CSS -->
-    <style>
-        /* --- Global Styles --- */
-        html, body {
-            overflow: hidden; width: 100%; height: 100%; margin: 0; padding: 0;
-            font-family: sans-serif; background-color: #000;
-        }
-        /* --- Canvas Style --- */
-        #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
-        /* --- UI Element Styles --- */
-        #info {
-            position: absolute; top: 15px; left: 15px; color: white;
-            background-color: rgba(0, 0, 0, 0.75); padding: 10px 15px;
-            border-radius: 8px; z-index: 100; font-size: 14px; display: block;
-            line-height: 1.5; max-width: 350px; border: 1px solid rgba(255,255,255,0.2);
-        }
-        #info b { color: #6fa8dc; } /* Style heading */
-        #status { font-weight: bold; display: block; margin-top: 8px; } /* Style status */
-        .error-message { /* Style for appended errors */
-            color: #ff8080; /* Light red */ margin-top: 10px; padding-top: 5px;
-            border-top: 1px dashed rgba(255, 128, 128, 0.5);
-            font-size: 0.9em; word-wrap: break-word;
-        }
-        #crosshair {
-            position: absolute; top: 50%; left: 50%; width: 2px; height: 20px;
-            background-color: rgba(255, 255, 255, 0.75); transform: translateX(-50%);
-            z-index: 99; display: none; pointer-events: none;
-        }
-        #crosshair::after {
-             content: ''; position: absolute; top: 50%; left: -9px; width: 20px; height: 2px;
-             background-color: rgba(255, 255, 255, 0.75); transform: translateY(-50%);
-        }
-    </style>
+      <!-- Ground Plane -->
+      <a-plane position="0 0 -4" rotation="-90 0 0" width="10" height="10" color="#7BC8A4" shadow></a-plane>
 
-    <!-- === CDN SCRIPTS (Remain in HEAD for early fetching) === -->
-    <script src="https://cdn.babylonjs.com/babylon.min.js"></script>
-    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
-    <!-- === END CDN SCRIPTS === -->
+      <!-- Background Sky -->
+      <a-sky color="#87CEEB"></a-sky>
 
-</head>
-<body>
-    <!-- UI Elements -->
-    <div id="info">
-        <b>Controls:</b><br>
-        Click Screen to Lock Mouse<br/>
-        WASD: Move | Space: Jump<br>Mouse: Look | ESC: Unlock Mouse
-        <br><span id="status">Loading Libraries...</span>
-        <!-- Errors will be appended here -->
-    </div>
-    <div id="crosshair"></div>
+      <!-- Simple Light -->
+      <a-light type="directional" color="#FFF" intensity="0.7" position="-1 1 2"></a-light>
+      <a-light type="ambient" color="#AAA"></a-light>
 
-    <!-- The Canvas for Babylon.js -->
-    <canvas id="renderCanvas"></canvas>
+      <!--
+        By default, a-scene includes:
+        - A camera with look-controls (mouse drag / device orientation)
+        - WASD-controls for desktop movement (may need enabling/tweaking)
+        - An "Enter VR" button if WebXR is supported
+      -->
 
-    <!-- Embedded JavaScript -->
-    <script>
-        // **** WRAP ALL CODE IN DOMContentLoaded ****
-        document.addEventListener('DOMContentLoaded', () => {
-
-            // --- DOM Element Selection ---
-            const canvas = document.getElementById('renderCanvas');
-            const infoElement = document.getElementById('info');
-            const statusElement = document.getElementById('status');
-            const crosshairElement = document.getElementById('crosshair');
-
-            // --- Global Variables ---
-            let engine = null;
-            let scene = null;
-            let isPointerLocked = false;
-            let ground = null;
-            let playerCamera = null;
-            let xrHelper = null;
-            let physicsEnabled = false; // Flag
-
-            // --- Helper Function to Display Errors ---
-            function displayError(context, error) {
-                console.error(`Error during ${context}:`, error);
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message';
-                errorDiv.innerHTML = `<b>${context} Error:</b><br>${error.message || error}`;
-                infoElement.appendChild(errorDiv);
-                statusElement.innerText = `${context} Failed!`;
-                statusElement.style.color = '#ff8080';
-            }
-
-            // --- Engine Initialization ---
-            try {
-                statusElement.innerText = "Initializing 3D Engine...";
-                // BABYLON should be defined now because this runs after scripts load
-                engine = new BABYLON.Engine(canvas, true, {
-                    preserveDrawingBuffer: true, stencil: true, antialias: true
-                });
-                statusElement.innerText = "Engine Initialized.";
-            } catch (e) {
-                displayError("Engine Initialization", e);
-                alert("FATAL ERROR: Could not initialize the 3D engine.\nCheck console for details.");
-                // No need to throw e here, as the rest of the code is inside the listener
-                return; // Stop execution within the listener if engine fails
-            }
-
-            // --- Scene Creation Function (Async) ---
-            const createScene = async () => {
-                // ... (rest of createScene function remains exactly the same as the previous single-page version) ...
-                 try {
-                    console.log("Creating scene..."); statusElement.innerText = "Creating Scene...";
-                    scene = new BABYLON.Scene(engine); scene.clearColor = new BABYLON.Color4(0, 0, 0, 1);
-
-                    // Physics Engine Setup
-                    const gravityVector = new BABYLON.Vector3(0, -9.81, 0); let physicsPlugin;
-                    try {
-                        statusElement.innerText = "Initializing Physics..."; console.log("Initializing Havok Physics...");
-                        const havokInstance = await HavokPhysics();
-                        physicsPlugin = new BABYLON.HavokPlugin(true, havokInstance);
-                        scene.enablePhysics(gravityVector, physicsPlugin);
-                        physicsEnabled = true; console.log("Physics enabled with Havok."); statusElement.innerText = "Physics Initialized.";
-                    } catch (physicsError) {
-                        physicsEnabled = false; displayError("Physics Initialization", physicsError);
-                    }
-
-                    // Camera
-                    statusElement.innerText = "Creating Camera...";
-                    playerCamera = new BABYLON.UniversalCamera("playerCamera", new BABYLON.Vector3(0, 2.5, -10), scene);
-                    playerCamera.attachControl(canvas, true); playerCamera.speed = 0.5; playerCamera.angularSensibility = 3500; playerCamera.inertia = 0.1;
-                    playerCamera.cameraRotation = new BABYLON.Vector2(0, 0); playerCamera.keysUp.push(87); playerCamera.keysDown.push(83); playerCamera.keysLeft.push(65); playerCamera.keysRight.push(68);
-                    playerCamera.checkCollisions = true; playerCamera.applyGravity = physicsEnabled;
-                    playerCamera.ellipsoid = new BABYLON.Vector3(0.5, 0.9, 0.5); playerCamera.ellipsoidOffset = new BABYLON.Vector3(0, 0.9, 0); playerCamera.collisionMask = 1;
-
-                    // Environment Preset
-                    let environmentHelper = null;
-                    try {
-                        statusElement.innerText = "Loading Environment..."; console.log("Creating default environment...");
-                        environmentHelper = scene.createDefaultEnvironment({ /* ... options ... */
-                            createSkybox: true, skyboxTexture: "https://assets.babylonjs.com/environments/environmentSpecular.env",
-                            skyboxColor: new BABYLON.Color3(0.1, 0.1, 0.2), skyboxSize: 200, createGround: true, groundSize: 100,
-                            groundColor: new BABYLON.Color3(0.5, 0.55, 0.5), enableGroundShadow: true, groundYBias: 0.01
-                         });
-                        if (!environmentHelper) throw new Error("createDefaultEnvironment returned null.");
-                        environmentHelper.setMainColor(new BABYLON.Color3(0.85, 0.85, 0.85));
-                        if (!environmentHelper.ground) throw new Error("Environment helper created but ground is missing.");
-                        ground = environmentHelper.ground; ground.name = "environmentGround"; ground.checkCollisions = true; ground.receiveShadows = true;
-                        if (!ground.material) { /* ... assign fallback material ... */
-                            let groundMat = new BABYLON.StandardMaterial("envGroundMat", scene); groundMat.diffuseColor = new BABYLON.Color3(0.5, 0.55, 0.5); groundMat.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1); ground.material = groundMat;
-                         } else { ground.material.alpha = 1.0; }
-                        if (physicsEnabled) { ground.physicsImpostor = new BABYLON.PhysicsImpostor( ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1, friction: 0.8 }, scene ); }
-                        console.log("Environment ground created."); statusElement.innerText = "Environment Loaded.";
-                    } catch (envError) {
-                        displayError("Environment Creation", envError); scene.createDefaultLight();
-                        if (!ground) { /* ... create fallback ground ... */
-                             ground = BABYLON.MeshBuilder.CreateGround("errorFallbackGround", { width: 100, height: 100 }, scene); let fallbackMat = new BABYLON.StandardMaterial("fallbackGroundMat", scene); fallbackMat.diffuseColor = new BABYLON.Color3(0.6, 0.6, 0.6); ground.material = fallbackMat;
-                             if (physicsEnabled) { ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1 }, scene); } ground.checkCollisions = true; ground.receiveShadows = true; console.log("Created fallback ground.");
-                         }
-                    }
-
-                    // Lighting & Shadows
-                    statusElement.innerText = "Setting up Lighting...";
-                    const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-0.6, -1, -0.4).normalize(), scene); /* ... light options ... */ dirLight.position = new BABYLON.Vector3(50, 80, 40); dirLight.intensity = 1.2; dirLight.shadowMinZ = 1; dirLight.shadowMaxZ = 150;
-                    const shadowGenerator = new BABYLON.ShadowGenerator(2048, dirLight); /* ... shadow options ... */ shadowGenerator.useBlurExponentialShadowMap = true; shadowGenerator.blurKernel = 32; shadowGenerator.setDarkness(0.4); shadowGenerator.forceBackFacesOnly = true; shadowGenerator.bias = 0.005;
-                    dirLight.shadowEnabled = true; if (ground) { ground.receiveShadows = true; }
-
-                    // Dynamic Objects
-                    statusElement.innerText = "Adding Objects...";
-                    const sphereMaterial = new BABYLON.StandardMaterial("sphereMat", scene); /* ... */ sphereMaterial.diffuseColor = new BABYLON.Color3(0.9, 0.4, 0.4); sphereMaterial.specularPower = 32;
-                    const boxMaterial = new BABYLON.StandardMaterial("boxMat", scene); /* ... */ boxMaterial.diffuseColor = new BABYLON.Color3(0.4, 0.4, 0.9); boxMaterial.specularPower = 32;
-                    const commonPhysicsProps = { restitution: 0.4, friction: 0.6 }; const objectCount = 25;
-                    for (let i = 0; i < objectCount; i++) { /* ... create spheres/boxes ... */
-                        const type = Math.random() < 0.5 ? 'sphere' : 'box'; const size = 0.8 + Math.random() * 1.8; const position = new BABYLON.Vector3((Math.random() - 0.5) * 70, 8 + Math.random() * 12, (Math.random() - 0.5) * 70); let mesh; let impostorType; if (type === 'sphere') { mesh = BABYLON.MeshBuilder.CreateSphere(`sphere${i}`, { diameter: size }, scene); mesh.material = sphereMaterial; impostorType = BABYLON.PhysicsImpostor.SphereImpostor; } else { mesh = BABYLON.MeshBuilder.CreateBox(`box${i}`, { size: size }, scene); mesh.material = boxMaterial; mesh.rotation.x = Math.random() * Math.PI; mesh.rotation.y = Math.random() * Math.PI; impostorType = BABYLON.PhysicsImpostor.BoxImpostor; } mesh.position = position; mesh.checkCollisions = true; if (physicsEnabled) { mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, impostorType, { mass: size * 1.2, ...commonPhysicsProps }, scene); } if (shadowGenerator) { shadowGenerator.addShadowCaster(mesh, true); }
-                    }
-                    console.log(`${objectCount} dynamic objects added.`);
-
-                    // WebXR Experience
-                    xrHelper = null;
-                    if (navigator.xr) {
-                        try {
-                            statusElement.innerText = "Initializing WebXR..."; console.log("Attempting to initialize WebXR...");
-                            xrHelper = await scene.createDefaultXRExperienceAsync({ floorMeshes: ground ? [ground] : [], disableTeleportation: true, });
-                            if (!xrHelper || !xrHelper.baseExperience) throw new Error("Base Experience could not be initialized.");
-                            console.log("WebXR Experience Helper created successfully."); statusElement.innerText = "WebXR Ready."; statusElement.style.color = '#8fbc8f';
-                            xrHelper.baseExperience.onStateChangedObservable.add((state) => { console.log("WebXR State:", BABYLON.WebXRState[state]); /* ... */ });
-                            if (xrHelper.baseExperience.onInitialCameraReadyObservable) { xrHelper.baseExperience.onInitialCameraReadyObservable.addOnce((xrCamera) => { console.log("WebXR Camera Ready."); }); }
-                             else { console.warn("onInitialCameraReadyObservable not found."); }
-                        } catch (xrError) { displayError("WebXR Initialization", xrError); }
-                    } else { console.warn("WebXR not supported."); statusElement.innerText = "WebXR Not Supported."; statusElement.style.color = '#ffa07a'; }
-
-                    setupControls();
-
-                    console.log("Scene creation complete.");
-                    if (!statusElement.innerText.includes("Error") && !statusElement.innerText.includes("Failed")) { statusElement.innerText = "Ready."; statusElement.style.color = '#8fbc8f'; }
-                    return scene;
-
-                } catch (sceneError) { displayError("Scene Creation", sceneError); return null; }
-            }; // --- End of createScene ---
-
-
-            // --- Control Setup Function ---
-            const setupControls = () => {
-                // ... (setupControls function remains exactly the same) ...
-                 try { statusElement.innerText = "Setting up Controls..."; scene.onPointerDown = (evt) => { const isInVR = xrHelper && xrHelper.baseExperience && xrHelper.baseExperience.state === BABYLON.WebXRState.IN_XR; if (evt.button === 0 && !isPointerLocked && !isInVR) { canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock; if (canvas.requestPointerLock) { canvas.requestPointerLock(); } else { console.warn("Pointer Lock API not available."); } } }; const pointerLockChange = () => { const element = document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement; const isInVR = xrHelper && xrHelper.baseExperience && xrHelper.baseExperience.state === BABYLON.WebXRState.IN_XR; if (element === canvas && !isInVR) { isPointerLocked = true; infoElement.style.display = 'none'; crosshairElement.style.display = 'block'; console.log("Pointer locked."); } else { isPointerLocked = false; if (!isInVR) { infoElement.style.display = 'block'; } else { infoElement.style.display = 'none'; } crosshairElement.style.display = 'none'; console.log("Pointer unlocked or in VR."); } }; document.addEventListener("pointerlockchange", pointerLockChange, false); document.addEventListener("mozpointerlockchange", pointerLockChange, false); document.addEventListener("webkitpointerlockchange", pointerLockChange, false); const jumpVelocity = 5.5; let canJump = true; const jumpCooldown = 700; scene.onKeyboardObservable.add((kbInfo) => { if (physicsEnabled && kbInfo.type === BABYLON.KeyboardEventTypes.KEYDOWN && kbInfo.event.code === "Space" && canJump) { if (playerCamera && ground) { const rayStart = playerCamera.position.subtract(new BABYLON.Vector3(0, playerCamera.ellipsoid.y * 0.9, 0)); const rayLength = playerCamera.ellipsoid.y * 1.1; const ray = new BABYLON.Ray(rayStart, new BABYLON.Vector3(0, -1, 0), rayLength); const pickInfo = scene.pickWithRay(ray, (mesh) => mesh === ground || (mesh.isPickable && mesh.physicsImpostor && mesh.physicsImpostor.mass > 0)); if (pickInfo && pickInfo.hit && pickInfo.distance < rayLength) { console.log("Jump initiated!"); playerCamera.cameraDirection.y = jumpVelocity; canJump = false; setTimeout(() => { canJump = true; }, jumpCooldown); } } } }); console.log("Controls initialized."); } catch (controlError) { displayError("Control Setup", controlError); }
-            };
-
-
-            // --- Main Execution Logic ---
-            (async () => {
-                try {
-                    const createdScene = await createScene();
-
-                    if (!createdScene) {
-                        console.error("Scene creation failed. Aborting further execution.");
-                        // Status is already set by displayError within createScene
-                        return; // Stop
-                    }
-
-                    console.log("Starting render loop.");
-                    engine.runRenderLoop(() => {
-                        try {
-                            if (scene && scene.activeCamera) {
-                               scene.render();
-                            }
-                        } catch (renderError) {
-                            console.error("Error during render loop:", renderError);
-                            // engine.stopRenderLoop(); // Optional: Stop on error
-                        }
-                    });
-
-                    window.addEventListener('resize', () => {
-                        try { if (engine) { engine.resize(); } }
-                        catch (resizeError) { console.error("Error during resize:", resizeError); }
-                    });
-
-                } catch (e) {
-                    // Catch top-level async errors (less likely now with try/catch inside)
-                    displayError("Initialization Flow", e);
-                    alert(`FATAL ERROR during initialization: ${e.message}\nCheck console.`);
-                }
-            })();
-
-        }); // **** END of DOMContentLoaded Listener ****
-    </script>
-
-</body>
+    </a-scene>
+  </body>
 </html>
