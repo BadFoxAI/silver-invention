@@ -2,80 +2,117 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>A-Frame Physics World v2</title>
-    <meta name="description" content="A-Frame Physics World with Environment and Basic Assets">
+    <title>A-Frame Ammo Physics World</title> <!-- Updated Title -->
+    <meta name="description" content="A-Frame Physics World using Ammo.js driver">
 
     <!-- A-Frame Library -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
-    <!-- A-Frame Physics System -->
-    <script src="https://unpkg.com/aframe-physics-system@4.3.1/dist/aframe-physics-system.min.js"></script>
+    <!-- === Physics Scripts (from your guide) === -->
+    <!-- Using Ammo.js driver -->
+    <script src="https://mixedreality.mozilla.org/ammo.js/builds/ammo.wasm.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@v4.0.1/dist/aframe-physics-system.min.js"></script>
+    <!-- === End Physics Scripts === -->
 
-    <!-- A-Frame Environment Component for nice presets -->
+    <!-- A-Frame Environment Component -->
     <script src="https://unpkg.com/aframe-environment-component@1.3.9/dist/aframe-environment-component.min.js"></script>
 
 </head>
 <body>
-    <!-- Enable physics system on the scene AND turn on debug view -->
-    <a-scene physics="gravity: -9.8; debug: true;"> <!-- DEBUG ENABLED -->
+    <!-- Enable physics using AMMO driver and debug -->
+    <a-scene physics="driver: ammo; debug: true; debugDrawMode: 1; gravity: -9.8;">
+        <!-- debugDrawMode: 1 shows wireframes -->
+        <!-- debugDrawMode: 2 shows wireframes + constraints -->
+        <!-- debugDrawMode: 3 shows wireframes + constraints + contacts -->
 
-        <!-- Assets Management System (Good practice) -->
+
+        <!-- Assets Management System -->
         <a-assets>
-            <!-- Define reusable materials if needed -->
-            <a-mixin id="dynamic" dynamic-body="shape: auto; linearDamping: 0.05; angularDamping: 0.05;"></a-mixin>
+            <!-- Reusable materials -->
             <a-mixin id="wood" material="color: #A0522D; roughness: 0.8;"></a-mixin>
             <a-mixin id="stone" material="color: #808080; roughness: 0.7;"></a-mixin>
+            <a-mixin id="metal" material="color: #FFD700; metalness: 0.6; roughness: 0.4;"></a-mixin>
         </a-assets>
 
         <!-- Environment Component -->
-        <!-- This replaces manual sky, ground, and basic lighting -->
-        <!-- The ground created by this component will automatically get a static body if physics is present -->
-        <a-entity environment="preset: forest; ground: hills; groundYScale: 3; groundTexture: walkernoise; groundColor: #524439; groundColor2: #695748; dressing: trees; dressingAmount: 30; dressingScale: 3; fog: 0.8; shadow: true;"></a-entity>
+        <!-- ADD AMMO attributes here - they will be applied to the generated ground -->
+        <a-entity environment="preset: forest; ground: hills; groundYScale: 3; groundTexture: walkernoise; groundColor: #524439; groundColor2: #695748; dressing: trees; dressingAmount: 30; dressingScale: 3; fog: 0.8; shadow: true;"
+                  ammo-body="type: static;"
+                  ammo-shape="type: box;">
+                  <!-- The environment ground shape is approximated as a box -->
+                  <!-- For complex ground, 'hacd' or 'mesh' shape might be needed, but box is simpler -->
+        </a-entity>
 
 
         <!-- Player Rig -->
         <a-entity id="player"
-                  position="0 5 8" <!-- Start higher up, further back -->
+                  position="0 10 8" <!-- Start higher -->
                   wasd-controls="acceleration: 80"
-                  dynamic-body="shape: capsule; mass: 5; linearDamping: 0.9; angularFactor: 0 0 0;"
-                  >
+                  <!-- Using Ammo attributes for the player -->
+                  ammo-body="type: dynamic;
+                             mass: 70; <!-- Realistic mass -->
+                             linearDamping: 0.95;
+                             angularFactor: 0 0 0;" <!-- Prevent rotation -->
+                  ammo-shape="type: capsule; <!-- Capsule shape for player -->
+                              fit: manual; <!-- Important for capsule -->
+                              height: 1.6; <!-- Player height -->
+                              radius: 0.3;">
             <a-camera look-controls="pointerLockEnabled: true">
-                 <!-- Make cursor smaller and semi-transparent -->
                 <a-cursor scale="0.5 0.5 0.5" color="#FFF" opacity="0.5"></a-cursor>
             </a-camera>
         </a-entity>
 
 
-        <!-- Dynamic Objects -->
-        <!-- Using mixins for physics and material -->
+        <!-- Dynamic Objects (Using Ammo attributes) -->
 
         <!-- Crates -->
-        <a-box mixin="dynamic wood" position="-3 8 -5" rotation="10 30 5" width="1.5" height="1.5" depth="1.5" shadow="cast: true"></a-box>
-        <a-box mixin="dynamic wood" position="-4 10 -5.5" rotation="-5 10 20" width="1.5" height="1.5" depth="1.5" shadow="cast: true"></a-box>
+        <a-box mixin="wood" position="-3 15 -5" rotation="10 30 5" width="1.5" height="1.5" depth="1.5" shadow="cast: true"
+               ammo-body="type: dynamic; mass: 10;"
+               ammo-shape="type: box;">
+        </a-box>
+        <a-box mixin="wood" position="-4 18 -5.5" rotation="-5 10 20" width="1.5" height="1.5" depth="1.5" shadow="cast: true"
+               ammo-body="type: dynamic; mass: 10;"
+               ammo-shape="type: box;">
+        </a-box>
 
         <!-- Boulders -->
-        <a-sphere mixin="dynamic stone" position="2 6 -6" radius="1.2" shadow="cast: true"></a-sphere>
-        <a-sphere mixin="dynamic stone" position="3 9 -7" radius="0.8" shadow="cast: true"></a-sphere>
+        <a-sphere mixin="stone" position="2 12 -6" radius="1.2" shadow="cast: true"
+                  ammo-body="type: dynamic; mass: 50; angularDamping: 0.1;"
+                  ammo-shape="type: sphere;">
+        </a-sphere>
+        <a-sphere mixin="stone" position="3 16 -7" radius="0.8" shadow="cast: true"
+                  ammo-body="type: dynamic; mass: 20; angularDamping: 0.1;"
+                  ammo-shape="type: sphere;">
+        </a-sphere>
 
         <!-- Pillar -->
-        <a-cylinder mixin="dynamic stone" position="5 5 -4" radius="0.7" height="4" shadow="cast: true"></a-cylinder>
+        <a-cylinder mixin="stone" position="5 10 -4" radius="0.7" height="4" shadow="cast: true"
+                    ammo-body="type: dynamic; mass: 80;"
+                    ammo-shape="type: cylinder;">
+        </a-cylinder>
 
-        <!-- Floating Torus (will fall) -->
-        <a-torus mixin="dynamic" material="color: #FFD700; metalness: 0.5;" position="-6 12 -8" radius="1.5" radius-tubular="0.3" rotation="30 45 10" shadow="cast: true"></a-torus>
+        <!-- Floating Torus -->
+        <a-torus mixin="metal" position="-6 20 -8" radius="1.5" radius-tubular="0.3" rotation="30 45 10" shadow="cast: true"
+                 ammo-body="type: dynamic; mass: 5;"
+                 ammo-shape="type: cylinder;"> <!-- Approximating torus as cylinder -->
+                 <!-- Note: Ammo doesn't have a native torus shape. Cylinder or HACD/Mesh needed for accuracy. -->
+        </a-torus>
 
-        <!-- Simple Platform Structure -->
-        <a-box mixin="stone" static-body position="0 2.5 -10" width="6" height="5" depth="1" shadow="receive: true; cast: true;"></a-box> <!-- Back wall -->
-        <a-box mixin="stone" static-body position="-3 0.25 -8" width="1" height="0.5" depth="4" shadow="receive: true; cast: true;"></a-box> <!-- Side platform -->
-         <a-box mixin="stone" static-body position="3 0.25 -8" width="1" height="0.5" depth="4" shadow="receive: true; cast: true;"></a-box> <!-- Side platform -->
+        <!-- Simple Platform Structure (Static) -->
+        <a-box mixin="stone" position="0 2.5 -10" width="6" height="5" depth="1" shadow="receive: true; cast: true;"
+               ammo-body="type: static;" ammo-shape="type: box;">
+        </a-box>
+        <a-box mixin="stone" position="-3 0.25 -8" width="1" height="0.5" depth="4" shadow="receive: true; cast: true;"
+               ammo-body="type: static;" ammo-shape="type: box;">
+        </a-box>
+         <a-box mixin="stone" position="3 0.25 -8" width="1" height="0.5" depth="4" shadow="receive: true; cast: true;"
+                ammo-body="type: static;" ammo-shape="type: box;">
+         </a-box>
 
-         <!-- Ramp (made of a rotated box) -->
-         <a-box mixin="wood" static-body position="0 0.7 -6" rotation="0 0 -20" width="3" height="0.3" depth="3" shadow="receive: true; cast: true;"></a-box>
-
-
-        <!-- NOTE: The environment component adds its own lighting, so we remove the manual lights
-             unless we want very specific effects. The shadow parameter on environment enables shadows. -->
-        <!-- <a-light type="ambient" color="#888"></a-light> -->
-        <!-- <a-light type="directional" ... > </a-light> -->
+         <!-- Ramp -->
+         <a-box mixin="wood" position="0 0.7 -6" rotation="0 0 -20" width="3" height="0.3" depth="3" shadow="receive: true; cast: true;"
+                ammo-body="type: static;" ammo-shape="type: box;">
+         </a-box>
 
     </a-scene>
 </body>
