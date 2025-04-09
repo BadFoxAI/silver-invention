@@ -14,6 +14,8 @@ let xrHelper = null;
 
 // --- Engine Initialization ---
 try {
+    // This line should no longer cause "BABYLON is not defined"
+    // because main.js is now deferred until babylon.min.js runs.
     engine = new BABYLON.Engine(canvas, true, {
         preserveDrawingBuffer: true, stencil: true, antialias: true
     });
@@ -36,20 +38,14 @@ const createScene = async () => {
     try {
         statusElement.innerText = "Initializing Physics...";
         console.log("Initializing Havok Physics...");
-        // Havok physics needs to be initialized asynchronously
-        const havokInstance = await HavokPhysics(); // Available globally from the UMD script
-        // Create the Havok plugin
-        physicsPlugin = new BABYLON.HavokPlugin(true, havokInstance); // Pass true for WASM instance
-        // Enable physics in the scene with the plugin
+        const havokInstance = await HavokPhysics(); // Global from UMD script
+        physicsPlugin = new BABYLON.HavokPlugin(true, havokInstance);
         scene.enablePhysics(gravityVector, physicsPlugin);
         console.log("Physics enabled with Havok.");
     } catch (error) {
         console.error("Failed to initialize Havok Physics:", error);
         statusElement.innerText = "Physics Init Failed!";
-        // Optionally fallback to another engine or disable physics
         alert("Failed to initialize Havok Physics. Check console for details.");
-        // Could add fallback: physicsPlugin = new BABYLON.CannonJSPlugin(); scene.enablePhysics...
-        // but requires adding Cannon CDN back to HTML.
         return null; // Indicate failure
     }
 
@@ -67,9 +63,6 @@ const createScene = async () => {
     playerCamera.keysRight.push(68); // D
 
     // --- Player Physics & Collision Settings ---
-    // Note: applyGravity with UniversalCamera and Havok might behave differently than Cannon.
-    // Often, a dedicated player capsule with a physics body is preferred for more robust control with Havok.
-    // For now, we keep the UniversalCamera settings, but adjustments might be needed.
     playerCamera.checkCollisions = true;
     playerCamera.applyGravity = true;
     playerCamera.ellipsoid = new BABYLON.Vector3(0.5, 0.9, 0.5);
@@ -80,21 +73,16 @@ const createScene = async () => {
     // --- Environment Preset ---
     console.log("Creating default environment...");
     statusElement.innerText = "Loading Environment...";
-    // ... (Environment setup code remains the same as previous version) ...
     let environmentHelper = null;
     try {
         environmentHelper = scene.createDefaultEnvironment({
             createSkybox: true,
             skyboxTexture: "https://assets.babylonjs.com/environments/environmentSpecular.env",
             skyboxColor: new BABYLON.Color3(0.1, 0.1, 0.2),
-            skyboxSize: 200,
-            createGround: true,
-            groundSize: 100,
+            skyboxSize: 200, createGround: true, groundSize: 100,
             groundColor: new BABYLON.Color3(0.5, 0.55, 0.5),
-            enableGroundShadow: true,
-            groundYBias: 0.01
+            enableGroundShadow: true, groundYBias: 0.01
         });
-
         if (environmentHelper) {
             environmentHelper.setMainColor(new BABYLON.Color3(0.85, 0.85, 0.85));
             if (environmentHelper.ground) {
@@ -111,7 +99,6 @@ const createScene = async () => {
             } else { throw new Error("Environment helper created but ground is missing."); }
         } else { throw new Error("createDefaultEnvironment returned null."); }
     } catch (envError) {
-        // ... (Fallback environment setup remains the same) ...
         console.error("Error creating default environment:", envError); statusElement.innerText = "Env Error. Using Fallback."; scene.createDefaultLight();
         if (!ground) {
             ground = BABYLON.MeshBuilder.CreateGround("errorFallbackGround", { width: 100, height: 100 }, scene);
@@ -123,7 +110,6 @@ const createScene = async () => {
 
 
     // --- Enhanced Lighting (Sun for Shadows) ---
-    // ... (Lighting code remains the same) ...
     const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-0.6, -1, -0.4).normalize(), scene);
     dirLight.position = new BABYLON.Vector3(50, 80, 40); dirLight.intensity = 1.2; dirLight.shadowMinZ = 1; dirLight.shadowMaxZ = 150;
     const shadowGenerator = new BABYLON.ShadowGenerator(2048, dirLight);
@@ -135,8 +121,6 @@ const createScene = async () => {
     // --- Dynamic Physics Objects ---
     console.log("Adding dynamic objects...");
     statusElement.innerText = "Adding Objects...";
-    // ... (Object creation code remains the same, including PhysicsImpostor setup) ...
-    // HavokPlugin generally respects the same PhysicsImpostor parameters for simple cases.
     const sphereMaterial = new BABYLON.StandardMaterial("sphereMat", scene); sphereMaterial.diffuseColor = new BABYLON.Color3(0.9, 0.4, 0.4); sphereMaterial.specularPower = 32;
     const boxMaterial = new BABYLON.StandardMaterial("boxMat", scene); boxMaterial.diffuseColor = new BABYLON.Color3(0.4, 0.4, 0.9); boxMaterial.specularPower = 32;
     const commonPhysicsProps = { restitution: 0.4, friction: 0.6 }; const objectCount = 25;
@@ -156,7 +140,6 @@ const createScene = async () => {
     // --- WebXR Experience ---
     console.log("Attempting to initialize WebXR...");
     statusElement.innerText = "Initializing WebXR...";
-    // ... (WebXR setup code remains the same, including the fix for addOnce) ...
     xrHelper = null;
     if (navigator.xr) {
         try {
@@ -173,7 +156,6 @@ const createScene = async () => {
         }
     } else { console.warn("WebXR is not supported by this browser/device."); statusElement.innerText = "WebXR Not Supported"; }
 
-
     setupControls(); // Setup pointer lock and jump listeners
 
     console.log("Scene creation complete.");
@@ -184,29 +166,21 @@ const createScene = async () => {
 // --- Control Setup Function ---
 const setupControls = () => {
     // --- Pointer Lock ---
-    // ... (Pointer lock code remains the same) ...
     scene.onPointerDown = (evt) => { const isInVR = xrHelper && xrHelper.baseExperience && xrHelper.baseExperience.state === BABYLON.WebXRState.IN_XR; if (evt.button === 0 && !isPointerLocked && !isInVR) { canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock; if (canvas.requestPointerLock) { canvas.requestPointerLock(); } else { console.warn("Pointer Lock API not available."); } } };
     const pointerLockChange = () => { const element = document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement; const isInVR = xrHelper && xrHelper.baseExperience && xrHelper.baseExperience.state === BABYLON.WebXRState.IN_XR; if (element === canvas && !isInVR) { isPointerLocked = true; infoElement.style.display = 'none'; crosshairElement.style.display = 'block'; console.log("Pointer locked."); } else { isPointerLocked = false; if (!isInVR) { infoElement.style.display = 'block'; } else { infoElement.style.display = 'none'; } crosshairElement.style.display = 'none'; console.log("Pointer unlocked or in VR."); } };
     document.addEventListener("pointerlockchange", pointerLockChange, false); document.addEventListener("mozpointerlockchange", pointerLockChange, false); document.addEventListener("webkitpointerlockchange", pointerLockChange, false);
 
     // --- Jump Mechanic ---
-    // The jump mechanic relies on modifying cameraDirection. This might need adjustment
-    // with Havok, especially if applyGravity on UniversalCamera isn't fully supported
-    // or behaves differently. Testing is required. A physics-based player controller
-    // mesh would be more robust for Havok.
-    const jumpVelocity = 5.5; // May need significant tuning for Havok
-    let canJump = true; const jumpCooldown = 700;
+    const jumpVelocity = 5.5; let canJump = true; const jumpCooldown = 700;
     scene.onKeyboardObservable.add((kbInfo) => {
         if (kbInfo.type === BABYLON.KeyboardEventTypes.KEYDOWN && kbInfo.event.code === "Space" && canJump) {
             if (playerCamera && ground) {
-                // Raycast check remains the same logic
                 const rayStart = playerCamera.position.subtract(new BABYLON.Vector3(0, playerCamera.ellipsoid.y * 0.9, 0));
                 const rayLength = playerCamera.ellipsoid.y * 1.1;
                 const ray = new BABYLON.Ray(rayStart, new BABYLON.Vector3(0, -1, 0), rayLength);
                 const pickInfo = scene.pickWithRay(ray, (mesh) => mesh === ground || (mesh.isPickable && mesh.physicsImpostor && mesh.physicsImpostor.mass > 0));
                 if (pickInfo && pickInfo.hit && pickInfo.distance < rayLength) {
                     console.log("Jump initiated! (Applying impulse via cameraDirection - May need tuning for Havok)");
-                    // Applying velocity directly to cameraDirection might be less effective/predictable with Havok
                     playerCamera.cameraDirection.y = jumpVelocity;
                     canJump = false;
                     setTimeout(() => { canJump = true; }, jumpCooldown);
@@ -224,7 +198,6 @@ const setupControls = () => {
     try {
         const createdScene = await createScene(); // Wait for scene creation
 
-        // Check if scene creation failed (e.g., physics init error)
         if (!createdScene) {
              console.error("Scene creation failed. Cannot start render loop.");
              statusElement.innerText = "Scene Init Failed!";
