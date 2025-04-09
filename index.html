@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Babylon.js World - Multi-File</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Babylon.js Core -->
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <!-- Cannon.js Physics Engine Plugin -->
+    <script src="https://cdn.babylonjs.com/cannon.js"></script>
+    <!-- Babylon.js Loaders (Needed for .env environment files, etc.) -->
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+
+</head>
+<body>
+    <!-- UI Elements -->
+    <div id="info">
+        <b>Controls:</b><br>
+        Click Screen to Lock Mouse<br/>
+        WASD: Move | Space: Jump<br>Mouse: Look | ESC: Unlock Mouse
+        <br><br><span id="status">Initializing... (Requires HTTPS for VR)</span>
+    </div>
+    <div id="crosshair"></div>
+
+    <!-- The Canvas for Babylon.js -->
+    <canvas id="renderCanvas"></canvas>
+
+    <!-- Link to our JavaScript code (Module type handles deferring) -->
+    <script type="module" src="main.js"></script>
+</body>
+</html>
