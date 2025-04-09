@@ -1,87 +1,105 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta charset="utf-8">
-    <title>A-Frame Scene with Physics</title> <!-- Updated Title -->
-    <meta name="description" content="A-Frame Scene with Physics">
+    <title>A-Frame FPS with Physics</title>
+    <meta name="description" content="A-Frame First-Person Shooter controls with Physics">
 
     <!-- A-Frame Library -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
-    <!-- A-Frame Physics System (using unpkg CDN) -->
-    <!-- This library adds the 'physics', 'static-body', 'dynamic-body' components -->
+    <!-- A-Frame Physics System (using Cannon.js driver by default) -->
     <script src="https://unpkg.com/aframe-physics-system@4.3.1/dist/aframe-physics-system.min.js"></script>
 
-  </head>
-  <body>
-    <!-- Add the 'physics' component to the scene to enable the system -->
-    <!-- We can configure gravity, iterations etc. here if needed, but defaults are okay -->
-    <a-scene background="color: #ECECEC" physics="gravity: -9.8;">
+    <!-- Optional: A-Frame Environment Component for nice presets later -->
+    <!-- <script src="https://unpkg.com/aframe-environment-component@1.3.9/dist/aframe-environment-component.min.js"></script> -->
 
-      <!-- Raise the dynamic shapes slightly so they fall -->
+</head>
+<body>
+    <!-- Enable the physics system on the scene -->
+    <!-- debug: true shows collision shapes -->
+    <a-scene background="color: #ADD8E6" physics="gravity: -9.8; debug: false;">
 
-      <!-- dynamic-body automatically infers shape from geometry -->
-      <a-box
-        position="-1 2 -3" <!-- Raised Y position -->
-        rotation="0 45 0"
-        color="#4CC3D9"
-        shadow="cast: true"
-        dynamic-body="shape: auto; mass: 1.5" > <!-- Add dynamic-body -->
-      </a-box>
+        <!-- Assets Management System (good practice, though not strictly needed for primitives) -->
+        <a-assets>
+            <!-- Define materials or models here later -->
+        </a-assets>
 
-      <a-sphere
-        position="0 3 -5" <!-- Raised Y position -->
-        radius="1.25"
-        color="#EF2D5E"
-        shadow="cast: true"
-        dynamic-body="shape: auto; mass: 2.5" > <!-- Add dynamic-body -->
-      </a-sphere>
+        <!-- Player Rig -->
+        <!-- This entity represents the player -->
+        <a-entity id="player"
+                  position="0 1.6 5" <!-- Start position (x y z), 1.6m height, back slightly -->
+                  wasd-controls="acceleration: 80" <!-- Standard WASD movement, higher acceleration -->
+                  dynamic-body="shape: capsule; <!-- Collision shape for player -->
+                                mass: 5;
+                                linearDamping: 0.9; <!-- Prevent sliding forever -->
+                                angularFactor: 0 0 0;" <!-- Prevent player capsule from rotating/tipping over -->
+                                >
+            <!-- The camera is nested inside the player entity -->
+            <!-- It moves with the player automatically -->
+            <!-- look-controls handles mouse drag / VR head look -->
+            <a-camera look-controls="pointerLockEnabled: true">
+                <!-- Optional: Add a cursor for interaction feedback -->
+                <a-cursor></a-cursor>
+            </a-camera>
+        </a-entity>
 
-      <a-cylinder
-        position="1 2.5 -3" <!-- Raised Y position -->
-        radius="0.5"
-        height="1.5"
-        color="#FFC65D"
-        shadow="cast: true"
-        dynamic-body="shape: auto; mass: 1" > <!-- Add dynamic-body -->
-      </a-cylinder>
 
-      <!-- Ground Plane -->
-      <!-- Add static-body so dynamic objects collide with it but it doesn't fall -->
-      <a-plane
-        position="0 0 -4"
-        rotation="-90 0 0"
-        width="10"
-        height="10"
-        color="#7BC8A4"
-        shadow="receive: true"
-        static-body > <!-- Add static-body -->
-      </a-plane>
+        <!-- Dynamic Objects (affected by physics) -->
+        <a-box position="-2 4 -3" rotation="10 30 5" color="#4CC3D9"
+               shadow="cast: true"
+               dynamic-body="mass: 1.5">
+        </a-box>
 
-      <!-- Background Sky -->
-      <a-sky color="#87CEEB"></a-sky>
+        <a-sphere position="0 6 -5" radius="1" color="#EF2D5E"
+                  shadow="cast: true"
+                  dynamic-body="mass: 2.5; angularDamping: 0.1;"> <!-- Add some damping -->
+        </a-sphere>
 
-      <!-- Lights (Important for shadows) -->
-      <a-light
-        type="directional"
-        color="#FFF"
-        intensity="0.8"
-        position="-2 5 3"
-        target="#target" <!-- Optional: Point light towards a target -->
-        castShadow="true"> <!-- Enable shadow casting for this light -->
-      </a-light>
-      <!-- Invisible target for the directional light -->
-       <a-entity id="target" position="0 0 -4"></a-entity>
+        <a-cylinder position="2 3 -2" radius="0.5" height="1.5" color="#FFC65D"
+                    shadow="cast: true"
+                    dynamic-body="mass: 1">
+        </a-cylinder>
 
-      <a-light type="ambient" color="#AAA" intensity="0.5"></a-light>
+         <!-- Add a few more boxes -->
+         <a-box position="-1.5 8 -4" rotation="30 10 40" width="0.8" height="0.8" depth="0.8" color="#FFA07A"
+               shadow="cast: true"
+               dynamic-body="mass: 1">
+        </a-box>
+         <a-box position="1.8 5 -3.5" rotation="5 70 20" width="1.2" height="1.2" depth="1.2" color="#98FB98"
+               shadow="cast: true"
+               dynamic-body="mass: 1.8">
+        </a-box>
 
-      <!--
-        A-Frame includes camera with look-controls (mouse/VR head)
-        and wasd-controls (check if enabled by default or add if needed).
-        The physics system does NOT automatically add physics to the default camera.
-        We would need a separate player entity for that.
-      -->
+
+        <!-- Static Ground -->
+        <a-plane position="0 0 0" rotation="-90 0 0" width="50" height="50"
+                 color="#7BC8A4"
+                 shadow="receive: true"
+                 static-body> <!-- Makes it solid but immovable -->
+        </a-plane>
+
+        <!-- Lighting -->
+        <!-- Use the environment component later for better lighting/sky presets -->
+        <a-light type="ambient" color="#888"></a-light>
+        <a-light type="directional"
+                 position="-1 1.5 1"
+                 target="#player" <!-- Light follows player direction roughly -->
+                 intensity="0.8"
+                 castShadow="true"
+                 shadow-mapSize-width="2048" <!-- Increase shadow quality -->
+                 shadow-mapSize-height="2048"
+                 shadow-camera-left="-15"
+                 shadow-camera-right="15"
+                 shadow-camera-bottom="-15"
+                 shadow-camera-top="15"
+                 shadow-camera-near="0.5"
+                 shadow-camera-far="50">
+        </a-light>
+
+        <!-- Basic Sky -->
+        <a-sky color="#B0E0E6"></a-sky>
 
     </a-scene>
-  </body>
+</body>
 </html>
